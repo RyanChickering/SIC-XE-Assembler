@@ -3,7 +3,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.io.File;
 import java.nio.file.Files;
-
+//This is a test comment
 public class Assembler {
     private static int locctr;
     private static String[] opTABLE;
