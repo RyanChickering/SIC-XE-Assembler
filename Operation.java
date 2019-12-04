@@ -1,5 +1,4 @@
 
-
 public class Operation {
     private String _mnemonic;
     private String _opcode;

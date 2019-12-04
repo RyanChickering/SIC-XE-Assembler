@@ -34,5 +34,4 @@ public class OPTable {
     public static Map<String, Operation> getOperaionTable() {
         return _OPTable;
     }
-
 }
