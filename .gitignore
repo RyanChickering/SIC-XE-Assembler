@@ -12,6 +12,8 @@
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/**/SIC-XE_Assembler.iml
+.idea/**/vcs.xml
 
 # Generated files
 .idea/**/contentModel.xml
