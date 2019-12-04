@@ -3,35 +3,39 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.io.File;
 import java.nio.file.Files;
-//This is a test comment
+
 public class Assembler {
     private static int locctr;
-    private static String[] opTABLE;
+    private static OPTable opTable;
     private static String[] symTABLE;
+    private static List<String> lines;
+    private static int lineCnt;
 
-    public static void main(String[]args){
+    public static void main(String[]args) throws IOException{
         //Should provide cmd line argument to pass an input file to the assembler
+        lineCnt = 0;
         pass1(args[0]);
         pass2();
-
     }
 
-    private static void pass1(String filename) {
+    private static void pass1(String filename) throws IOException{
         //TODO: read first input line
-        String opcode = "";
+        getLines(filename);
+        String opcode = opcodeParser(nextLine());
         if(!opcode.equals("START")){
-            while(opcode.equals("END")) {
-                //TODO:
+            System.out.println(opcode);
+            //while(opcode.equals("END")) {
+            //TODO:
                 /* Save #[Operand] as starting address
                 initialize loccctr to starting address
                 write line to intermediate file
                 read next input line
              */
-            }
+            //}
         } else {
             locctr = 0;
         }
-        while (!opcode.equals("END")){
+        //while (!opcode.equals("END")){
             /*TODO:
             if not a comment line
                 if there is a symbol in the label field
@@ -57,7 +61,7 @@ public class Assembler {
             write line to intermediate file
             read next input line
             */
-        }
+        //}
         //write last line to intermediate file
         //save locctr - starting address as program length
     }
@@ -100,9 +104,48 @@ public class Assembler {
          */
     }
 
-    private static String getInLine(){
-        return "WambdaLamdba";
+    //method that reads in all the lines from a file
+    private static void getLines(String filename) throws IOException{
+        File infile = new File(filename);
+        if(infile.exists()) {
+            lines = Files.readAllLines(infile.toPath(), Charset.defaultCharset());
+        }
+        else{
+            System.out.println("No such file found at " + filename);
+        }
     }
+
+    //Method that gets the next line of the program
+    private static String nextLine(){
+        String out = lines.get(lineCnt);
+        lineCnt++;
+        return out;
+    }
+    //method that gets the opcode isolated from spaces/labels that might be preceding it on a line
+    private static String opcodeParser(String line){
+        String out = line;
+        if(out.indexOf(' ') == 0){
+            out = spaceIterator(line);
+        } else {
+            int i = 0;
+            while(!out.substring(i,i+1).equals(" ")){
+                i++;
+            }
+            out = spaceIterator(out.substring(i));
+        }
+        int space = out.indexOf(' ');
+        out = out.substring(0,space);
+        return out;
+    }
+    //Method to skip spaces and reach the start of actual lines
+    private static String spaceIterator(String string){
+        int i = 0;
+        while(string.substring(i,i+1).equals(" ")){
+            i++;
+        }
+        return string.substring(i);
+    }
+
     private static boolean writeLine(){
         return false;
     }
