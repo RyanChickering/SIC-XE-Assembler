@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.io.File;
@@ -6,7 +7,7 @@ import java.nio.file.Files;
 
 public class Assembler {
     private static int locctr;
-    private static OPTable opTable;
+    private static OPTable opTable = new OPTable();
     private static String[] symTABLE;
     private static List<String> lines;
     private static int lineCnt;
@@ -21,21 +22,17 @@ public class Assembler {
     private static void pass1(String filename) throws IOException{
         //TODO: read first input line
         getLines(filename);
-        String opcode = opcodeParser(nextLine());
-        if(!opcode.equals("START")){
-            System.out.println(opcode);
-            //while(opcode.equals("END")) {
-            //TODO:
-                /* Save #[Operand] as starting address
-                initialize loccctr to starting address
-                write line to intermediate file
-                read next input line
-             */
-            //}
+        String[] opcode = opcodeParser(nextLine());
+        if(opcode[1].equals("START")){
+            System.out.println(opcode[0]+ " " + opcode[1] + " " + opcode[2]);
+            locctr = Integer.parseInt(opcode[2]);
+            writeLine(opcode);
+            opcode = opcodeParser(nextLine());
         } else {
             locctr = 0;
         }
-        //while (!opcode.equals("END")){
+        while (!opcode[1].equals("END")){
+            opcode = opcodeParser(nextLine());
             /*TODO:
             if not a comment line
                 if there is a symbol in the label field
@@ -61,7 +58,7 @@ public class Assembler {
             write line to intermediate file
             read next input line
             */
-        //}
+        }
         //write last line to intermediate file
         //save locctr - starting address as program length
     }
@@ -121,20 +118,32 @@ public class Assembler {
         lineCnt++;
         return out;
     }
-    //method that gets the opcode isolated from spaces/labels that might be preceding it on a line
-    private static String opcodeParser(String line){
-        String out = line;
-        if(out.indexOf(' ') == 0){
-            out = spaceIterator(line);
+    //method that gets each part of a line isolated. Returns an array of strings with
+    //label,opcode,value.
+    private static String[] opcodeParser(String line){
+        String[] out = new String[3];
+        out[0] = line; out[1] = line; out[2] = line;
+        //if the line starts with a space(not a label) skip spaces until you hit something
+        if(out[1].indexOf(' ') == 0){
+            out[1] = spaceIterator(line);
+            out[0] = null;
         } else {
             int i = 0;
-            while(!out.substring(i,i+1).equals(" ")){
+            //see how long the label is, then use that to create the proper substrings
+            while(!(out[1].charAt(i) == (' '))){
                 i++;
             }
-            out = spaceIterator(out.substring(i));
+            out[0] = out[0].substring(0,i);
+            out[1] = spaceIterator(out[1].substring(i));
         }
-        int space = out.indexOf(' ');
-        out = out.substring(0,space);
+        //check if there is more content after the opcode, if there is, assign it to out[2]
+        int space = out[1].indexOf(' ');
+        if(space != -1) {
+            out[2] = spaceIterator(out[1].substring(space));
+            out[1] = out[1].substring(0, space);
+        } else {
+            out[2] = null;
+        }
         return out;
     }
     //Method to skip spaces and reach the start of actual lines
@@ -146,8 +155,11 @@ public class Assembler {
         return string.substring(i);
     }
 
-    private static boolean writeLine(){
-        return false;
+    private static boolean writeLine(String[] opcode) throws IOException{
+        String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
+        PrintWriter printer = new PrintWriter(filepath, "UTF-8");
+        printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
+        return true;
     }
     private static boolean searchOPTABLE(){
         return false;
