@@ -1,8 +1,8 @@
 public class Label {
-    String label;
+    String name;
     int location;
-    public Label(String label, int location){
-        this.label = label;
+    public Label(String name, int location){
+        this.name = name;
         this.location = location;
     }
 }
