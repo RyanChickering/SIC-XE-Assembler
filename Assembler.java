@@ -161,8 +161,15 @@ public class Assembler {
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
         return true;
     }
-    private static boolean searchOPTABLE(){
-        return false;
+    private static Operation searchOPTABLE(String mnemonic){
+        Operation tempOp = opTable.get(mnemonic);
+        if(mnemonic == tempOp.mnemonic()){
+            return tempOp;
+        }
+        else{
+            System.out.println("mnemonic not found");
+            return null;
+        }
     }
     private static boolean searchSYMTABLE(){
         return false;
