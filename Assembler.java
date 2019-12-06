@@ -171,10 +171,10 @@ public class Assembler {
             return null;
         }
     }
-    private static Label searchSYMTABLE(String label){
-        for (Label string: symTable){
-            if(string.name.equals(label)){
-              return string;
+    private static Label searchSYMTABLE(String compare){
+        for (Label label: symTable){
+            if(label.name.equals(compare)){
+              return label;
             }
         }
         return null;
