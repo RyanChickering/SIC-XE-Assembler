@@ -30,6 +30,7 @@ public class Assembler {
         pass2();
     }
 
+
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
     private static void pass1(String filename) throws IOException,invalidOPException, ErrorDuplicateLabelException{
         //gets the lines fromt he file provided as an argument
@@ -186,10 +187,14 @@ public class Assembler {
     private static boolean writeIntermediate(String[] opcode) throws IOException{
         String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
-        printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
         if(opcode[0] == null){
-            return false;
+            opcode[0] = " ";
         }
+        if(opcode[2] == null) {
+            opcode[2] = " ";
+        }
+        printer.println(String.format("%8s%8s%8s", opcode[0], opcode[1], opcode[2]));
+
         printer.close();
         return true;
     }
