@@ -26,7 +26,7 @@ public class Assembler {
         if(opcode[1].equals("START")){
             System.out.println(opcode[0]+ " " + opcode[1] + " " + opcode[2]);
             locctr = Integer.parseInt(opcode[2]);
-            writeLine(opcode);
+            writeIntermediate(opcode);
             opcode = opcodeParser(nextLine());
         } else {
             locctr = 0;
@@ -155,10 +155,14 @@ public class Assembler {
         return string.substring(i);
     }
 
-    private static boolean writeLine(String[] opcode) throws IOException{
-        String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
-        PrintWriter printer = new PrintWriter(filepath, "UTF-8");
+    private static boolean writeIntermediate(String[] opcode) throws IOException{
+        String filepath = System.getProperty("user.dir") + "/pass1Intermediate";        //creates ands to an intermediate file
+        PrintWriter printer = new PrintWriter(filepath, "UTF-8");                   //doesn't write if the op code is null
+        if (opcode[0] == (null)){
+            return false;
+        }
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
+        printer.close();
         return true;
     }
     private static Operation searchOPTABLE(String mnemonic){
@@ -172,8 +176,8 @@ public class Assembler {
         }
     }
     private static Label searchSYMTABLE(String compare){
-        for (Label label: symTable){
-            if(label.name.equals(compare)){
+        for (Label label: symTable){                        //searches the SYM table and returns the label if
+            if(label.name.equals(compare)){                 // the  label name is equal to the search string
               return label;
             }
         }
