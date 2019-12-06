@@ -27,7 +27,14 @@ public class Assembler {
             System.out.println("Duplicate labels are found");
             System.exit(1);
         }
-        pass2();
+
+        try {
+            pass2();
+        }
+        catch(undefinedSymbolException e){
+            System.out.println("The symbol is undefined you fuck");
+            System.exit(1);
+        }
     }
 
 
@@ -92,7 +99,7 @@ public class Assembler {
         progLength = locctr - startLoc;
     }
 
-    private static void pass2(){
+    private static void pass2() throws undefinedSymbolException{
         /*TODO
         read first input line
         if opcode = start
@@ -203,7 +210,7 @@ public class Assembler {
         String filepath = System.getProperty("user.dir") + "/pass2Intermediate";        //creates ands to an intermediate file
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         if (opcode[1].equals("RESW")|| (opcode[1].equals("START")) || (opcode[1].equals("END"))){
-            return false;
+            opcode[1] = " ";
         }
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
         printer.close();
