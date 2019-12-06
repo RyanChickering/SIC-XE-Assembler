@@ -13,15 +13,25 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException{
+    public static void main(String[]args) throws IOException, invalidOPException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
-        pass1(args[0]);
+        try {
+            pass1(args[0]);
+        }
+        catch(invalidOPException e){
+            System.out.println("The opcode is invalid you fuck");
+            System.exit(1);
+        }
+        catch(ErrorDuplicateLabelException e){
+            System.out.println("Duplicate labels are found");
+            System.exit(1);
+        }
         pass2();
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
-    private static void pass1(String filename) throws IOException{
+    private static void pass1(String filename) throws IOException,invalidOPException, ErrorDuplicateLabelException{
         //gets the lines fromt he file provided as an argument
         getLines(filename);
         String[] opcode = opcodeParser(nextLine());
@@ -44,13 +54,14 @@ public class Assembler {
             } else {
                 //checks the labels
                 if(searchSYMTABLE(opcode[0]) != null){
-                    //TODO: et error duplicate label
+                    throw new ErrorDuplicateLabelException();
                 } else {
                     Label label = new Label(opcode[0],locctr);
                     symTable.add(label);
                 }
                 boolean extended = false;
                 if(opcode[1].substring(0,1).equals("+")){
+                    opcode[1] = opcode[1].substring(1);
                     extended = true;
                 }
                 Operation opcodeInfo = searchOPTABLE(opcode[1]);
@@ -71,6 +82,7 @@ public class Assembler {
                     //find length of operand
                     locctr += opcode[3].length();
                 } else {
+                    throw new invalidOPException();
                     //error not a real thing
                 }
                 writeIntermediate(opcode);
