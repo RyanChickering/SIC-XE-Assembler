@@ -8,7 +8,7 @@ import java.nio.file.Files;
 public class Assembler {
     private static int locctr;
     private static OPTable opTable = new OPTable();
-    private static String[] symTABLE;
+    private static ArrayList<Label> symTable = new ArrayList<>();
     private static List<String> lines;
     private static int lineCnt;
 
@@ -171,8 +171,13 @@ public class Assembler {
             return null;
         }
     }
-    private static boolean searchSYMTABLE(){
-        return false;
+    private static Label searchSYMTABLE(String label){
+        for (Label string: symTable){
+            if(string.name.equals(label)){
+              return string;
+            }
+        }
+        return null;
     }
 }
 // This is a test comment
