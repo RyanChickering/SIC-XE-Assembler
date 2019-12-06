@@ -11,6 +11,7 @@ public class Assembler {
     private static ArrayList<Label> symTable = new ArrayList<>();
     private static List<String> lines;
     private static int lineCnt;
+    private static int progLength;
 
     public static void main(String[]args) throws IOException{
         //Should provide cmd line argument to pass an input file to the assembler
@@ -19,10 +20,12 @@ public class Assembler {
         pass2();
     }
 
+    //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
     private static void pass1(String filename) throws IOException{
-        //TODO: read first input line
+        //gets the lines fromt he file provided as an argument
         getLines(filename);
         String[] opcode = opcodeParser(nextLine());
+        //checks if there is a different start location than 0
         if(opcode[1].equals("START")){
             System.out.println(opcode[0]+ " " + opcode[1] + " " + opcode[2]);
             locctr = Integer.parseInt(opcode[2]);
@@ -31,36 +34,50 @@ public class Assembler {
         } else {
             locctr = 0;
         }
+        int startLoc = locctr;
+        //analyzes the opcodes in the file to make sure that they are all real
         while (!opcode[1].equals("END")){
             opcode = opcodeParser(nextLine());
-            /*TODO:
-            if not a comment line
-                if there is a symbol in the label field
-                    search SYMTABLE for label
-                    if found
-                        set error flag(duplicate symbol)
-                    else
-                        insert (Label,locctr) into SYMTAB
-                search OPTAB for OPCODE
-                if found then
-                    add 3 {instruction length} to locctr
-                else if OPCODE = WORD
-                    add 3 to locctr
-                else if OPCODE = RESW
-                    add 3*#[OPERAND] to LOCCTR
-                else if OPCODE = RESB
-                    add #[Operand] to locctr
-                else if OPCODE = BYTE
-                    find length of constant in bytes
-                    add length to locctr
-                else
-                    set error flag(invalid opcode)
-            write line to intermediate file
-            read next input line
-            */
+            //checks if the line is a comment
+            if(opcode[0].equals("comment")){
+
+            } else {
+                //checks the labels
+                if(searchSYMTABLE(opcode[0]) != null){
+                    //TODO: et error duplicate label
+                } else {
+                    Label label = new Label(opcode[0],locctr);
+                    symTable.add(label);
+                }
+                boolean extended = false;
+                if(opcode[1].substring(0,1).equals("+")){
+                    opcode[1] = opcode[1].substring(1);
+                    extended = true;
+                }
+                Operation opcodeInfo = searchOPTABLE(opcode[1]);
+                if(opcodeInfo != null){
+                    if(extended){
+                        locctr += 12;
+                    } else {
+                        if(true);
+                        //set up some way to differentiate the different formats and add them to the locctr.
+                    }
+                } else if(opcode[1].equals("WORD")){
+                    locctr += 3;
+                } else if(opcode[1].equals("RESW")){
+                    locctr += 3*Integer.parseInt(opcode[3]);
+                } else if(opcode[1].equals("RESB")){
+                    locctr += Integer.parseInt(opcode[3]);
+                } else if(opcode[1].equals("BYTE")){
+                    //find length of operand
+                    locctr += opcode[3].length();
+                } else {
+                    //error not a real thing
+                }
+                writeIntermediate(opcode);
+            }
         }
-        //write last line to intermediate file
-        //save locctr - starting address as program length
+        progLength = locctr - startLoc;
     }
 
     private static void pass2(){
@@ -156,13 +173,9 @@ public class Assembler {
     }
 
     private static boolean writeIntermediate(String[] opcode) throws IOException{
-        String filepath = System.getProperty("user.dir") + "/pass1Intermediate";        //creates ands to an intermediate file
-        PrintWriter printer = new PrintWriter(filepath, "UTF-8");                   //doesn't write if the op code is null
-        if (opcode[0] == (null)){
-            return false;
-        }
+        String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
+        PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
-        printer.close();
         return true;
     }
     private static Operation searchOPTABLE(String mnemonic){
@@ -176,8 +189,8 @@ public class Assembler {
         }
     }
     private static Label searchSYMTABLE(String compare){
-        for (Label label: symTable){                        //searches the SYM table and returns the label if
-            if(label.name.equals(compare)){                 // the  label name is equal to the search string
+        for (Label label: symTable){
+            if(label.name.equals(compare)){
               return label;
             }
         }
