@@ -1,8 +1,6 @@
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.io.File;
 import java.nio.file.Files;
 
 public class Assembler {
@@ -178,9 +176,20 @@ public class Assembler {
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
         return true;
     }
+
+    //Method to write out object program onto new file
+    private static boolean writeOutput(String[] opcode) throws FileNotFoundException, UnsupportedEncodingException {
+        String filepath = System.getProperty("user.dir") + "/objectProgram";
+        PrintWriter printer = new PrintWriter(filepath, "UTF-8");
+        printer.println(String.format("H%5s   00%4s",opcode[0], opcode[2]));
+        printer.println(String.format("T%6s   00"));
+
+        return true;
+    }
+
     private static Operation searchOPTABLE(String mnemonic){
-        Operation tempOp = opTable.get(mnemonic);
-        if(mnemonic == tempOp.mnemonic()){
+        Operation tempOp = opTable.getOperation(mnemonic);       //creates new operation object using mnemonic as key
+        if(mnemonic == tempOp.mnemonic()){              //compares mnemonic with operation mnemonic
             return tempOp;
         }
         else{

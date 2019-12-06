@@ -31,8 +31,20 @@ public class OPTable {
         _OPTable.put("WD",    new Operation("WD",    "3/4", "DC"));
     }
 
-    public static Operation get(String mnemonic){
+    public static Operation getOperation(String mnemonic){
         return _OPTable.get(mnemonic);
+    }
+
+    public static String getMnemonic(String mnemonic){
+        return _OPTable.get(mnemonic).mnemonic();
+    }
+
+    public static String getFormat(String mnemonic){
+        return _OPTable.get(mnemonic).format();
+    }
+
+    public static String getOpcode(String mnemonic){
+        return _OPTable.get(mnemonic).opcode();
     }
 
     public static Map<String, Operation> getOperaionTable() {
