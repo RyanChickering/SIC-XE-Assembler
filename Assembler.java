@@ -13,25 +13,15 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException, invalidOPException{
+    public static void main(String[]args) throws IOException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
-        try {
-            pass1(args[0]);
-        }
-        catch(invalidOPException e){
-            System.out.println("The opcode is invalid you fuck");
-            System.exit(1);
-        }
-        catch(ErrorDuplicateLabelException e){
-            System.out.println("Duplicate labels are found");
-            System.exit(1);
-        }
+        pass1(args[0]);
         pass2();
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
-    private static void pass1(String filename) throws IOException,invalidOPException, ErrorDuplicateLabelException{
+    private static void pass1(String filename) throws IOException{
         //gets the lines fromt he file provided as an argument
         getLines(filename);
         String[] opcode = opcodeParser(nextLine());
@@ -54,14 +44,13 @@ public class Assembler {
             } else {
                 //checks the labels
                 if(searchSYMTABLE(opcode[0]) != null){
-                    throw new ErrorDuplicateLabelException();
+                    //TODO: et error duplicate label
                 } else {
                     Label label = new Label(opcode[0],locctr);
                     symTable.add(label);
                 }
                 boolean extended = false;
                 if(opcode[1].substring(0,1).equals("+")){
-                    opcode[1] = opcode[1].substring(1);
                     extended = true;
                 }
                 Operation opcodeInfo = searchOPTABLE(opcode[1]);
@@ -82,7 +71,6 @@ public class Assembler {
                     //find length of operand
                     locctr += opcode[3].length();
                 } else {
-                    throw new invalidOPException();
                     //error not a real thing
                 }
                 writeIntermediate(opcode);
@@ -140,6 +128,13 @@ public class Assembler {
         }
     }
 
+    private static void objectCoder(String opcode, String operand){
+        String out;
+        Operation opInfo = searchOPTABLE(opcode);
+        int opValue = Integer.parseInt(opInfo.opcode(), 16);
+
+    }
+
     //Method that gets the next line of the program
     private static String nextLine(){
         String out = lines.get(lineCnt);
@@ -172,6 +167,18 @@ public class Assembler {
         } else {
             out[2] = null;
         }
+        //check for comments
+        for(int i = 0; i < 3; i++) {
+            if (out[i] != null) {
+                if (out[i].contains(".")) {
+                    if(out[i].indexOf(' ') < out[i].indexOf('.')){
+                        out[i] = out[i].substring(0, out[i].indexOf(' '));
+                    } else {
+                        out[i] = out[i].substring(0, out[i].indexOf('.'));
+                    }
+                }
+            }
+        }
         return out;
     }
     //Method to skip spaces and reach the start of actual lines
@@ -186,20 +193,6 @@ public class Assembler {
     private static boolean writeIntermediate(String[] opcode) throws IOException{
         String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
-        printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
-        if(opcode[0] == null){
-            return false;
-        }
-        printer.close();
-        return true;
-    }
-
-    private static boolean writeListing(String[] opcode) throws IOException{
-        String filepath = System.getProperty("user.dir") + "/pass2Intermediate";        //creates ands to an intermediate file
-        PrintWriter printer = new PrintWriter(filepath, "UTF-8");
-        if (opcode[1].equals("RESW")|| (opcode[1].equals("START")) || (opcode[1].equals("END"))){
-            return false;
-        }
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
         printer.close();
         return true;

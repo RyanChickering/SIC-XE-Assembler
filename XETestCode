@@ -1,4 +1,5 @@
-        START   4000
+        START   4000    .This is a comment
+        FIX
 Label   CLEAR   X
         CLEAR   A
 		LDCH    =X’00’
