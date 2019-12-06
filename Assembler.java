@@ -198,7 +198,7 @@ public class Assembler {
         return true;
     }
     private static Operation searchOPTABLE(String mnemonic){
-        Operation tempOp = opTable.get(mnemonic);
+        Operation tempOp = opTable.getOperation(mnemonic);
         if(mnemonic == tempOp.mnemonic()){
             return tempOp;
         }
