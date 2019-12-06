@@ -12,6 +12,8 @@ public class Assembler {
     private static List<String> lines;
     private static int lineCnt;
 
+
+
     public static void main(String[]args) throws IOException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
@@ -68,12 +70,18 @@ public class Assembler {
         //save locctr - starting address as program length
     }
 
-    private static void pass2(){
-        /*TODO
-        read first input line
-        if opcode = start
-            write listing line
-            read next input line
+    private static void pass2(String fileName) throws IOException{
+        //TODO
+        //read first input line
+        getLines(fileName);
+        String[] opCode = opcodeParser(nextLine());
+        //if opcode = start
+           // write listing line
+            //read next input line
+            if(opCode[1].equals("START")){
+                
+            }
+            /*
         write header record to object program
         initialize first text record
         while opcode != end
