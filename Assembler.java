@@ -8,7 +8,7 @@ import java.nio.file.Files;
 public class Assembler {
     private static int locctr;
     private static OPTable opTable = new OPTable();
-    private static String[] symTABLE;
+    private static ArrayList<Label> symTable = new ArrayList<>();
     private static List<String> lines;
     private static int lineCnt;
 
@@ -18,6 +18,7 @@ public class Assembler {
         pass1(args[0]);
         pass2();
     }
+    //give me the master
 
     private static void pass1(String filename) throws IOException{
         //TODO: read first input line
@@ -26,38 +27,42 @@ public class Assembler {
         if(opcode[1].equals("START")){
             System.out.println(opcode[0]+ " " + opcode[1] + " " + opcode[2]);
             locctr = Integer.parseInt(opcode[2]);
-            writeLine(opcode);
+            writeIntermediate(opcode);
             opcode = opcodeParser(nextLine());
         } else {
             locctr = 0;
         }
         while (!opcode[1].equals("END")){
             opcode = opcodeParser(nextLine());
-            /*TODO:
-            if not a comment line
-                if there is a symbol in the label field
-                    search SYMTABLE for label
-                    if found
-                        set error flag(duplicate symbol)
-                    else
-                        insert (Label,locctr) into SYMTAB
-                search OPTAB for OPCODE
+            if(!(opcode[0].equals("comment"))){
+                if(opcode[0] != null){
+                    if(searchSYMTABLE(opcode[0])) {
+
+                    }else {
+                        Label label = new Label(opcode[0],locctr);
+                        symTable.add(label);
+                    }
+
+                }
+                if(searchOPTABLE(opcode[1])){
+                    locctr += 0;
+                }
+                /*search OPTAB for OPCODE
                 if found then
-                    add 3 {instruction length} to locctr
+                add 3 {instruction length} to locctr
                 else if OPCODE = WORD
-                    add 3 to locctr
+                add 3 to locctr
                 else if OPCODE = RESW
-                    add 3*#[OPERAND] to LOCCTR
+                add 3*#[OPERAND] to LOCCTR
                 else if OPCODE = RESB
-                    add #[Operand] to locctr
+                add #[Operand] to locctr
                 else if OPCODE = BYTE
-                    find length of constant in bytes
-                    add length to locctr
+                find length of constant in bytes
+                add length to locctr
                 else
-                    set error flag(invalid opcode)
-            write line to intermediate file
-            read next input line
-            */
+                set error flag(invalid opcode)*/
+            }
+            writeIntermediate(opcode);
         }
         //write last line to intermediate file
         //save locctr - starting address as program length
@@ -122,6 +127,10 @@ public class Assembler {
     //label,opcode,value.
     private static String[] opcodeParser(String line){
         String[] out = new String[3];
+        if(line.indexOf('.') == 0){
+            out[0] = "comment";
+            return out;
+        }
         out[0] = line; out[1] = line; out[2] = line;
         //if the line starts with a space(not a label) skip spaces until you hit something
         if(out[1].indexOf(' ') == 0){
@@ -155,16 +164,16 @@ public class Assembler {
         return string.substring(i);
     }
 
-    private static boolean writeLine(String[] opcode) throws IOException{
+    private static boolean writeIntermediate(String[] opcode) throws IOException{
         String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
         return true;
     }
-    private static boolean searchOPTABLE(){
+    private static boolean searchOPTABLE(String opcode){
         return false;
     }
-    private static boolean searchSYMTABLE(){
+    private static boolean searchSYMTABLE(String label){
         return false;
     }
 }
