@@ -127,26 +127,27 @@ public class Assembler {
                 else{
                     operandLoc = 0;
                 }
+                //TODO Assemble object code instruction
             }
             else if(opCode[1].equals("WORD")){
-                locctr += 3;
-            } else if(opCode[1].equals("RESW")){
-                locctr += 3*Integer.parseInt(opCode[3]);
-            } else if(opCode[1].equals("RESB")){
-                locctr += Integer.parseInt(opCode[3]);
-            } else if(opCode[1].equals("BYTE")){
-                //find length of operand
-                locctr += opCode[3].length();
-            } else {
-                throw new invalidOPException();
-                //error not a real thing
+                //convert to Object Code
             }
-
-
-
-            //TODO Assemble object code instruction
-
+            else if(opCode[1].equals("BYTE")){
+                //convert to Object Code
+            }
+            //if object code will not fit into the current text record then
+            //                    write text record to object program
+            //                    initialize new text record
+            writeListing(opCode);
+            opCode = opcodeParser(nextLine());
         }
+        writeListing(opCode);
+        //        write last text record to object program
+        //        write end record to object program
+        //        write last listing line
+
+
+
         /*TODO
         read first input line
         if opcode = start
