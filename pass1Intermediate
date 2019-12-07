@@ -1,1 +1,16 @@
-           START    4000
+4000          START   4000    
+4000          TIXR            
+4000  Label   CLEAR   X       
+4000          CLEAR   A       
+4000          LDCH    =X’00’  
+4000          RMO     A,S     
+4012          LDT     #1024   
+4012  $AALOOP TD      =X’F1’  
+4012          JEQ     $AALOOP 
+4012          RD      =X’F1’  
+4012          COMPR   A,S     
+4012          JEQ     $AAEXIT 
+4012          STCH    BUFFER,X
+4012          TIXR    T       
+4012          JLT     $AALOOP 
+4012  $AAEXIT STX     LENGTH  

@@ -1,8 +1,8 @@
         START   4000    .This is a comment
-        FIX
+        TIXR
 Label   CLEAR   X
         CLEAR   A
-		LDCH    =X’00’
+        LDCH    =X’00’
         RMO     A,S
         +LDT    #1024
 $AALOOP TD      =X’F1’
