@@ -13,7 +13,7 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException, invalidOPException{
+    public static void main(String[]args) throws IOException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
         try {
@@ -29,7 +29,7 @@ public class Assembler {
         }
 
         try {
-            pass2();
+            pass2("pass1Intermediate");
         }
         catch(undefinedSymbolException e){
             System.out.println("The symbol is undefined you fuck");
@@ -99,7 +99,7 @@ public class Assembler {
         progLength = locctr - startLoc;
     }
 
-    private static void pass2(String fileName) throws undefinedSymbolException{
+    private static void pass2(String fileName) throws IOException, undefinedSymbolException{
         int operandLoc;
         getLines(fileName);
         String[] opCode = opcodeParser((nextLine()));
