@@ -99,7 +99,34 @@ public class Assembler {
         progLength = locctr - startLoc;
     }
 
-    private static void pass2() throws undefinedSymbolException{
+    private static void pass2(String fileName) throws undefinedSymbolException{
+        int operandLoc;
+        getLines(fileName);
+        String[] opCode = opcodeParser((nextLine()));
+        if(opCode[1].equals("START")){
+            writeListing(opCode);
+            locctr = Integer.parseInt(opCode[2]);
+            opCode = opcodeParser(nextLine());
+        }
+        else{
+            locctr = 0;
+        }
+        while(opCode[1].equals("END") == false){
+            opCode = opcodeParser(nextLine());
+            //Checks if comment
+            if(searchOPTABLE(opCode[1]) != null){
+                if(searchSYMTABLE(opCode[0]) != null){
+                    //store symbol value as operand address
+                    //operandLoc = opCode[1];
+                }
+                else{
+                    operandLoc = 0;
+                }
+            }
+            else{
+                operandLoc = 0;
+            }
+        }
         /*TODO
         read first input line
         if opcode = start
