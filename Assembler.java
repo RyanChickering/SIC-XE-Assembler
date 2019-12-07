@@ -114,18 +114,38 @@ public class Assembler {
         while(opCode[1].equals("END") == false){
             opCode = opcodeParser(nextLine());
             //Checks if comment
-            if(searchOPTABLE(opCode[1]) != null){
-                if(searchSYMTABLE(opCode[0]) != null){
-                    //store symbol value as operand address
-                    //operandLoc = opCode[1];
+            if(searchOPTABLE(opCode[2]) != null) {
+                if (opCode[3] != null) {
+                    if (searchSYMTABLE(opCode[0]) != null) {
+                        //store symbol value as operand address
+                        //operandLoc = opCode[1];
+                    } else {
+                        operandLoc = 0;
+                        throw new undefinedSymbolException();
+                    }
                 }
                 else{
                     operandLoc = 0;
                 }
             }
-            else{
-                operandLoc = 0;
+            else if(opCode[1].equals("WORD")){
+                locctr += 3;
+            } else if(opCode[1].equals("RESW")){
+                locctr += 3*Integer.parseInt(opCode[3]);
+            } else if(opCode[1].equals("RESB")){
+                locctr += Integer.parseInt(opCode[3]);
+            } else if(opCode[1].equals("BYTE")){
+                //find length of operand
+                locctr += opCode[3].length();
+            } else {
+                throw new invalidOPException();
+                //error not a real thing
             }
+
+
+
+            //TODO Assemble object code instruction
+
         }
         /*TODO
         read first input line
