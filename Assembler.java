@@ -33,7 +33,7 @@ public class Assembler {
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
     private static void pass1(String filename) throws IOException,invalidOPException, ErrorDuplicateLabelException{
-        //gets the lines fromt he file provided as an argument
+        //gets the lines from the file provided as an argument
         getLines(filename);
         String[] opcode = opcodeParser(nextLine());
         //checks if there is a different start location than 0
