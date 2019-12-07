@@ -1,6 +1,8 @@
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.io.File;
 import java.nio.file.Files;
 
 public class Assembler {
@@ -11,16 +13,27 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException{
+    public static void main(String[]args) throws IOException, invalidOPException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
-        pass1(args[0]);
+        try {
+            pass1(args[0]);
+        }
+        catch(invalidOPException e){
+            System.out.println("The opcode is invalid you fuck");
+            System.exit(1);
+        }
+        catch(ErrorDuplicateLabelException e){
+            System.out.println("Duplicate labels are found");
+            System.exit(1);
+        }
         pass2();
     }
 
+
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
-    private static void pass1(String filename) throws IOException{
-        //gets the lines fromt he file provided as an argument
+    private static void pass1(String filename) throws IOException,invalidOPException, ErrorDuplicateLabelException{
+        //gets the lines from the file provided as an argument
         getLines(filename);
         String[] opcode = opcodeParser(nextLine());
         //checks if there is a different start location than 0
@@ -42,7 +55,7 @@ public class Assembler {
             } else {
                 //checks the labels
                 if(searchSYMTABLE(opcode[0]) != null){
-                    //TODO: et error duplicate label
+                    throw new ErrorDuplicateLabelException();
                 } else {
                     Label label = new Label(opcode[0],locctr);
                     symTable.add(label);
@@ -70,6 +83,7 @@ public class Assembler {
                     //find length of operand
                     locctr += opcode[3].length();
                 } else {
+                    throw new invalidOPException();
                     //error not a real thing
                 }
                 writeIntermediate(opcode);
@@ -173,23 +187,31 @@ public class Assembler {
     private static boolean writeIntermediate(String[] opcode) throws IOException{
         String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
-        printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
+        if(opcode[0] == null){
+            opcode[0] = " ";
+        }
+        if(opcode[2] == null) {
+            opcode[2] = " ";
+        }
+        printer.println(String.format("%8s%8s%8s", opcode[0], opcode[1], opcode[2]));
+
+        printer.close();
         return true;
     }
 
-    //Method to write out object program onto new file
-    private static boolean writeOutput(String[] opcode) throws FileNotFoundException, UnsupportedEncodingException {
-        String filepath = System.getProperty("user.dir") + "/objectProgram";
+    private static boolean writeListing(String[] opcode) throws IOException{
+        String filepath = System.getProperty("user.dir") + "/pass2Intermediate";        //creates ands to an intermediate file
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
-        printer.println(String.format("H%5s   00%4s",opcode[0], opcode[2]));
-        printer.println(String.format("T%6s   00"));
-
+        if (opcode[1].equals("RESW")|| (opcode[1].equals("START")) || (opcode[1].equals("END"))){
+            return false;
+        }
+        printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
+        printer.close();
         return true;
     }
-
     private static Operation searchOPTABLE(String mnemonic){
-        Operation tempOp = opTable.getOperation(mnemonic);       //creates new operation object using mnemonic as key
-        if(mnemonic == tempOp.mnemonic()){              //compares mnemonic with operation mnemonic
+        Operation tempOp = opTable.getOperation(mnemonic);
+        if(mnemonic == tempOp.mnemonic()){
             return tempOp;
         }
         else{
