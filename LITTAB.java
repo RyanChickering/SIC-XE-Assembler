@@ -9,14 +9,14 @@ public class LITTAB {
 
     }
 
-    private void add(String name, int value, int length){
+    public static void add(String name, int value, int length){
         LITTAB.put(name, new Literal(value, length,  ""));
     }
-    private boolean search(String name){
+    public static boolean search(String name){
         return (getLITTAB(name) != null);
     }
 
-    private void setAddress(String name, String address){
+    public static void setAddress(String name, String address){
         LITTAB.get(name).address = address;
     }
 

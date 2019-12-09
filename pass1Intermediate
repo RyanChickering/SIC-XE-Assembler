@@ -160,3 +160,19 @@
 000A          TIXR    T       
 006A          JLT     $AALOOP 
 00FA  $AAEXIT STX     LENGTH  
+0004  Labelel START   40      
+0004          TIXR            
+0064          CLEAR   X       
+00C4          CLEAR   A       
+0025          LDCH    =X’00’  
+00B5          RMO     A,S     
+0016          LDT     #1024   
+00D6  $AALOOP TD      =X’F1’  
+0067          JEQ     $AALOOP 
+00F7          RD      =X’F1’  
+0088          COMPR   A,S     
+00E8          JEQ     $AAEXIT 
+0079          STCH    BUFFER,X
+000A          TIXR    T       
+006A          JLT     $AALOOP 
+00FA  $AAEXIT STX     LENGTH  

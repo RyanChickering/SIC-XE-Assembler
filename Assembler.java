@@ -95,6 +95,11 @@ public class Assembler {
                     throw new invalidOPException();
                     //error not a real thing
                 }
+                if (opcode[2].contains("=")){
+                    if (!LITTAB.search(opcode[2])){
+                        
+                    }
+                }
                 opcode = opcodeParser(nextLine());
             }
         }
