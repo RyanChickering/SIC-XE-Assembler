@@ -88,9 +88,18 @@ public class Assembler {
                     throw new invalidOPException();
                     //error not a real thing
                 }
+                int index;
+                String name;
+                String value;
+                int length;
                 if (opcode[2].contains("=")){
                     if (!LITTAB.search(opcode[2])){
-                        
+                        index = opcode[2].indexOf('\'');
+                        name = opcode[2].substring(1,index);
+                        value = opcode[2].substring(index, opcode[2].lastIndexOf('\''));
+                        length = value.length();
+                        int i = Integer.parseInt(value);
+                        LITTAB.add(name,i,length);
                     }
                 }
                 opcode = opcodeParser(nextLine());
