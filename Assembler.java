@@ -18,11 +18,11 @@ public class Assembler {
             pass1(args[0]);
         }
         catch(invalidOPException e){
-            System.out.println("The opcode is invalid you fuck");
+            System.out.println("The opcode is invalid");
             System.exit(1);
         }
         catch(ErrorDuplicateLabelException e){
-            System.out.println("Duplicate labels are found you bitch");
+            System.out.println("Duplicate labels are found");
             System.exit(1);
         }
         pass2();
@@ -53,9 +53,11 @@ public class Assembler {
             } else {
                 //checks the labels
                 if(opcode[0] != null && searchSYMTABLE(opcode[0]) != null){
-                    throw new ErrorDuplicateLabelException();
+                    if(!opcode[0].equals(" ")){
+                        throw new ErrorDuplicateLabelException();
+                    }
                 } else {
-                    Label label = new Label(opcode[2],locctr);
+                    Label label = new Label(opcode[0],locctr);
                     symTable.add(label);
                 }
                 boolean extended = false;
@@ -74,6 +76,9 @@ public class Assembler {
                     } else if(opcodeInfo.format().equals("3")){
                         locctr += 3;
                     }
+                } else if(extended){
+                    searchOPTABLE(opcode[1].substring(1));
+                    locctr += 4;
                 } else if(opcode[1].equals("WORD")){
                     locctr += 3;
                 } else if(opcode[1].equals("RESW")){
@@ -133,18 +138,29 @@ public class Assembler {
                     }
                 }
                 //check if there is a symbol in the operand field
-                if(opCode[2] != null) {
+                if(!opCode[2].equals("")) {
                     //check if there is an immediate, if there is convert it to an int
                     if(opCode[2].charAt(0) == '#'){
                         opCode[2] = opCode[2].substring(1);
                         location = hexToDec(opCode[2]);
                         //check if there is an indirect
+                    } else if(opCode[2].charAt(0) == '='){
+
                     } else if(opCode[2].charAt(0) == '@'){
 
                         //if the thing is not an immediate or indirect, check the symtable to see if that symbol exists.
+                    } else if(opCode[2].contains(",")){
+                        String part1 = opCode[2].substring(0,opCode[2].indexOf(","));
+                        if(searchSYMTABLE(part1) != null){
+                            location = searchSYMTABLE(part1).location;
+                        } else if(getRegisterNum(part1) != -1){
+                            location = getRegisterNum(part1)*10;
+                        }
                     } else if (searchSYMTABLE(opCode[2]) != null) {
                         location = searchSYMTABLE(opCode[2]).location;
                         //if the operand is not an immediate, register, indirect, or valid symbol, throw an exception
+                    } else if(getRegisterNum(opCode[2])!= -1){
+                      location = getRegisterNum(opCode[2]);
                     } else {
                         throw new undefinedSymbolException();
                     }
@@ -155,9 +171,9 @@ public class Assembler {
                 //conver the opcode and format of the opcode into their integer forms
                 int opVal = hexToDec(opCode[1]);
                 int format = Integer.parseInt(searchOPTABLE(opCode[1]).format());
-                int nexAddy = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
+                int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
                 //create a new object code based on the opcode, the operand value, the format, and the base
-                ObjectCode objectCode = new ObjectCode(opVal,location,base, searchOPTABLE(opCode[1]).format(),opCode[2]/*,nextAddy*/);
+                ObjectCode objectCode = new ObjectCode(opVal,location,programCount, base, searchOPTABLE(opCode[1]).format(),opCode[2]);
                 //as long as the text record hasn't exceeded it's length
                 if(textRecord.length() < (59+opNum)){
                     if(textRecord.length() == 0){
@@ -165,14 +181,14 @@ public class Assembler {
                     }
                     //add the object code to the text record
                     textRecord.append("^");
-                    textRecord.append(objectCode.toString());
+                    textRecord.append(objectCode.printObjectCode());
                     //keep track of how many object codes have been added to the current record because the ^ creates a new character
                     opNum++;
                 } else {
                     //if the text record will get too big, print out the line and start a new one
                     writeListing(textRecord.toString(), start, hexToDec(opCode[3]));
                     textRecord = new StringBuilder();
-                    textRecord.append(objectCode.toString());
+                    textRecord.append(objectCode.printObjectCode());
                     start = 0;
                     opNum = 0;
                 }

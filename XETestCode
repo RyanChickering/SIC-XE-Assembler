@@ -1,4 +1,4 @@
-Labelel START   40    .This is a comment
+Labelel START   0400    .This is a comment
         TIXR
        CLEAR   X
         CLEAR   A
@@ -14,4 +14,5 @@ $AALOOP TD      =X’F1’
         TIXR    T
         JLT     $AALOOP
 $AAEXIT STX     LENGTH
+LENGTH  RESW    3
         END
