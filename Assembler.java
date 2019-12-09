@@ -11,7 +11,7 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException, invalidOPException, undefinedSymbolException{
+    public static void main(String[]args) throws IOException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
         try {
@@ -25,10 +25,17 @@ public class Assembler {
             System.out.println("Duplicate labels are found");
             System.exit(1);
         }
-        pass2();
-        //Deletes the intermediate file
-        File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
-        //intermediateFile.delete();
+        try {
+
+            pass2();
+            //Deletes the intermediate file
+            File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
+            //intermediateFile.delete();
+        }
+        catch(undefinedSymbolException e){
+            System.out.println("Symbol is undefined you fuck");
+            System.exit(1);
+        }
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
