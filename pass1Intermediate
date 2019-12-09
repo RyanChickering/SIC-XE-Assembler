@@ -1,1 +1,162 @@
-           START    4000
+4000  Labelel START   0400
+4000          TIXR            
+4006          CLEAR   X       
+400C          CLEAR   A       
+4012          LDCH    =X’00’  
+401B          RMO     A,S     
+4021          LDT     #1024   
+402D  $AALOOP TD      =X’F1’  
+4036          JEQ     $AALOOP 
+403F          RD      =X’F1’  
+4048          COMPR   A,S     
+404E          JEQ     $AAEXIT 
+4057          STCH    BUFFER,X
+4060          TIXR    T       
+4066          JLT     $AALOOP 
+406F  $AAEXIT STX     LENGTH  
+4000  Labelel START   4000    
+4000          TIXR            
+4006          CLEAR   X       
+400C          CLEAR   A       
+4012          LDCH    =X’00’  
+401B          RMO     A,S     
+4021          LDT     #1024   
+402D  $AALOOP TD      =X’F1’  
+4036          JEQ     $AALOOP 
+403F          RD      =X’F1’  
+4048          COMPR   A,S     
+404E          JEQ     $AAEXIT 
+4057          STCH    BUFFER,X
+4060          TIXR    T       
+4066          JLT     $AALOOP 
+406F  $AAEXIT STX     LENGTH  
+400  Labelel START   400     
+400          TIXR            
+406          CLEAR   X       
+40C          CLEAR   A       
+412          LDCH    =X’00’  
+41B          RMO     A,S     
+421          LDT     #1024   
+42D  $AALOOP TD      =X’F1’  
+436          JEQ     $AALOOP 
+43F          RD      =X’F1’  
+448          COMPR   A,S     
+44E          JEQ     $AAEXIT 
+457          STCH    BUFFER,X
+460          TIXR    T       
+466          JLT     $AALOOP 
+46F  $AAEXIT STX     LENGTH  
+04000  Labelel START   400     
+04000          TIXR            
+04060          CLEAR   X       
+040C0          CLEAR   A       
+04120          LDCH    =X’00’  
+041B0          RMO     A,S     
+04210          LDT     #1024   
+042D0  $AALOOP TD      =X’F1’  
+04360          JEQ     $AALOOP 
+043F0          RD      =X’F1’  
+04480          COMPR   A,S     
+044E0          JEQ     $AAEXIT 
+04570          STCH    BUFFER,X
+04600          TIXR    T       
+04660          JLT     $AALOOP 
+046F0  $AAEXIT STX     LENGTH  
+000400  Labelel START   400     
+000400          TIXR            
+000406          CLEAR   X       
+00040C          CLEAR   A       
+000412          LDCH    =X’00’  
+00041B          RMO     A,S     
+000421          LDT     #1024   
+00042D  $AALOOP TD      =X’F1’  
+000436          JEQ     $AALOOP 
+00043F          RD      =X’F1’  
+000448          COMPR   A,S     
+00044E          JEQ     $AAEXIT 
+000457          STCH    BUFFER,X
+000460          TIXR    T       
+000466          JLT     $AALOOP 
+00046F  $AAEXIT STX     LENGTH  
+00400  Labelel START   400     
+00400          TIXR            
+00406          CLEAR   X       
+0040C          CLEAR   A       
+00412          LDCH    =X’00’  
+0041B          RMO     A,S     
+00421          LDT     #1024   
+0042D  $AALOOP TD      =X’F1’  
+00436          JEQ     $AALOOP 
+0043F          RD      =X’F1’  
+00448          COMPR   A,S     
+0044E          JEQ     $AAEXIT 
+00457          STCH    BUFFER,X
+00460          TIXR    T       
+00466          JLT     $AALOOP 
+0046F  $AAEXIT STX     LENGTH  
+0400  Labelel START   400     
+0400          TIXR            
+0406          CLEAR   X       
+040C          CLEAR   A       
+0412          LDCH    =X’00’  
+041B          RMO     A,S     
+0421          LDT     #1024   
+042D  $AALOOP TD      =X’F1’  
+0436          JEQ     $AALOOP 
+043F          RD      =X’F1’  
+0448          COMPR   A,S     
+044E          JEQ     $AAEXIT 
+0457          STCH    BUFFER,X
+0460          TIXR    T       
+0466          JLT     $AALOOP 
+046F  $AAEXIT STX     LENGTH  
+0040  Labelel START   40      
+0040          TIXR            
+0046          CLEAR   X       
+004C          CLEAR   A       
+0052          LDCH    =X’00’  
+005B          RMO     A,S     
+0061          LDT     #1024   
+006D  $AALOOP TD      =X’F1’  
+0076          JEQ     $AALOOP 
+007F          RD      =X’F1’  
+0088          COMPR   A,S     
+008E          JEQ     $AAEXIT 
+0097          STCH    BUFFER,X
+00A0          TIXR    T       
+00A6          JLT     $AALOOP 
+00AF  $AAEXIT STX     LENGTH  
+0004  Labelel START   40      
+0004  Labelel START   40      
+0004          TIXR            
+0064          CLEAR   X       
+00C4          CLEAR   A       
+0025          LDCH    =X’00’  
+00B5          RMO     A,S     
+0016          LDT     #1024   
+00D6  $AALOOP TD      =X’F1’  
+0067          JEQ     $AALOOP 
+00F7          RD      =X’F1’  
+0088          COMPR   A,S     
+00E8          JEQ     $AAEXIT 
+0079          STCH    BUFFER,X
+000A          TIXR    T       
+006A          JLT     $AALOOP 
+00FA  $AAEXIT STX     LENGTH  
+0004  Labelel START   40      
+0004  Labelel START   40      
+0004          TIXR            
+0064          CLEAR   X       
+00C4          CLEAR   A       
+0025          LDCH    =X’00’  
+00B5          RMO     A,S     
+0016          LDT     #1024   
+00D6  $AALOOP TD      =X’F1’  
+0067          JEQ     $AALOOP 
+00F7          RD      =X’F1’  
+0088          COMPR   A,S     
+00E8          JEQ     $AAEXIT 
+0079          STCH    BUFFER,X
+000A          TIXR    T       
+006A          JLT     $AALOOP 
+00FA  $AAEXIT STX     LENGTH  

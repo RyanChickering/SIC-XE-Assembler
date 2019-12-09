@@ -1,8 +1,6 @@
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.io.File;
 import java.nio.file.Files;
 
 public class Assembler {
@@ -13,7 +11,7 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException{
+    public static void main(String[]args) throws IOException, invalidOPException, undefinedSymbolException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
         try {
@@ -27,16 +25,11 @@ public class Assembler {
             System.out.println("Duplicate labels are found");
             System.exit(1);
         }
-
-        try {
-            pass2("pass1Intermediate");
-        }
-        catch(undefinedSymbolException e){
-            System.out.println("The symbol is undefined you fuck");
-            System.exit(1);
-        }
+        pass2();
+        //Deletes the intermediate file
+        File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
+        //intermediateFile.delete();
     }
-
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
     private static void pass1(String filename) throws IOException,invalidOPException, ErrorDuplicateLabelException{
@@ -45,9 +38,8 @@ public class Assembler {
         String[] opcode = opcodeParser(nextLine());
         //checks if there is a different start location than 0
         if(opcode[1].equals("START")){
-            System.out.println(opcode[0]+ " " + opcode[1] + " " + opcode[2]);
-            locctr = Integer.parseInt(opcode[2]);
-            writeIntermediate(opcode);
+            locctr = hexToDec(opcode[2]);
+            writeIntermediate(locctr, opcode);
             opcode = opcodeParser(nextLine());
         } else {
             locctr = 0;
@@ -55,13 +47,12 @@ public class Assembler {
         int startLoc = locctr;
         //analyzes the opcodes in the file to make sure that they are all real
         while (!opcode[1].equals("END")){
-            opcode = opcodeParser(nextLine());
             //checks if the line is a comment
-            if(opcode[0].equals("comment")){
+            if(opcode[0] != null && opcode[0].equals("comment")){
 
             } else {
                 //checks the labels
-                if(searchSYMTABLE(opcode[0]) != null){
+                if(opcode[0] != null && searchSYMTABLE(opcode[0]) != null){
                     throw new ErrorDuplicateLabelException();
                 } else {
                     Label label = new Label(opcode[0],locctr);
@@ -72,13 +63,17 @@ public class Assembler {
                     opcode[1] = opcode[1].substring(1);
                     extended = true;
                 }
+                writeIntermediate(locctr, opcode);
                 Operation opcodeInfo = searchOPTABLE(opcode[1]);
                 if(opcodeInfo != null){
                     if(extended){
                         locctr += 12;
-                    } else {
-                        if(true);
-                        //set up some way to differentiate the different formats and add them to the locctr.
+                    } else if(opcodeInfo.format().equals("2")){
+                        locctr += 6;
+                    } else if(opcodeInfo.format().equals("1")){
+                        locctr += 3;
+                    } else if(opcodeInfo.format().equals("3/4")){
+                        locctr += 9;
                     }
                 } else if(opcode[1].equals("WORD")){
                     locctr += 3;
@@ -93,16 +88,17 @@ public class Assembler {
                     throw new invalidOPException();
                     //error not a real thing
                 }
-                writeIntermediate(opcode);
+                opcode = opcodeParser(nextLine());
             }
         }
         progLength = locctr - startLoc;
     }
 
-    private static void pass2(String fileName) throws IOException, undefinedSymbolException{
+    private static void pass2() throws IOException, undefinedSymbolException{
         int operandLoc;
-        getLines(fileName);
-        String[] opCode = opcodeParser((nextLine()));
+        lineCnt = 0;
+        getLines(System.getProperty("user.dir") + "/pass1Intermediate");
+        String[] opCode = pass2Parser((nextLine()));
         if(opCode[1].equals("START")){
             writeListing(opCode);
             locctr = Integer.parseInt(opCode[2]);
@@ -111,11 +107,11 @@ public class Assembler {
         else{
             locctr = 0;
         }
-        while(opCode[1].equals("END") == false){
+        while(!(opCode[1].equals("END"))){
             opCode = opcodeParser(nextLine());
             //Checks if comment
-            if(searchOPTABLE(opCode[2]) != null) {
-                if (opCode[3] != null) {
+            if(searchOPTABLE(opCode[1]) != null){
+                if(opCode[2] != null) {
                     if (searchSYMTABLE(opCode[0]) != null) {
                         //store symbol value as operand address
                         //operandLoc = opCode[1];
@@ -123,31 +119,15 @@ public class Assembler {
                         operandLoc = 0;
                         throw new undefinedSymbolException();
                     }
-                }
-                else{
+                } else {
                     operandLoc = 0;
                 }
-                //TODO Assemble object code instruction
+                //TODO: Assemble object code instruction method
             }
-            else if(opCode[1].equals("WORD")){
-                //convert to Object Code
+            else{
+                operandLoc = 0;
             }
-            else if(opCode[1].equals("BYTE")){
-                //convert to Object Code
-            }
-            //if object code will not fit into the current text record then
-            //                    write text record to object program
-            //                    initialize new text record
-            writeListing(opCode);
-            opCode = opcodeParser(nextLine());
         }
-        writeListing(opCode);
-        //        write last text record to object program
-        //        write end record to object program
-        //        write last listing line
-
-
-
         /*TODO
         read first input line
         if opcode = start
@@ -196,6 +176,14 @@ public class Assembler {
         }
     }
 
+    //TODO: Method that calculates object codes based on info from intermediate file
+    private static void objectCoder(String opcode, String operand){
+        String out;
+        Operation opInfo = searchOPTABLE(opcode);
+        int opValue = Integer.parseInt(opInfo.opcode(), 16);
+
+    }
+
     //Method that gets the next line of the program
     private static String nextLine(){
         String out = lines.get(lineCnt);
@@ -228,7 +216,37 @@ public class Assembler {
         } else {
             out[2] = null;
         }
+        //check for comments
+        for(int i = 0; i < 3; i++) {
+            if (out[i] != null) {
+                if (out[i].contains(".")) {
+                    if(out[i].indexOf(' ') < out[i].indexOf('.')){
+                        out[i] = out[i].substring(0, out[i].indexOf(' '));
+                    } else {
+                        out[i] = out[i].substring(0, out[i].indexOf('.'));
+                    }
+                }
+            }
+        }
         return out;
+    }
+
+    //Parses opcodes out of the intermediate file.
+    //label,opcode,operand,address
+    private static String[] pass2Parser(String line){
+        String[] out = new String[4];
+        out[3] = spaceShaver(line.substring(0,4));
+        out[0] = spaceShaver(line.substring(6,14));
+        out[1] = spaceShaver(line.substring(14,22));
+        out[2] = spaceShaver(line.substring(22));
+        return out;
+    }
+    //Method that removes extra spaces from the end of stuff being read in from the intermediate
+    private static String spaceShaver(String string){
+        while(string.indexOf(' ') != -1){
+            string = string.substring(0,string.length()-1);
+        }
+        return string;
     }
     //Method to skip spaces and reach the start of actual lines
     private static String spaceIterator(String string){
@@ -239,21 +257,29 @@ public class Assembler {
         return string.substring(i);
     }
 
-    private static boolean writeIntermediate(String[] opcode) throws IOException{
+    //method that writes the intermediate file
+    private static void writeIntermediate(int location, String[] opcode) throws IOException{
         String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
-        PrintWriter printer = new PrintWriter(filepath, "UTF-8");
+        FileWriter fw = new FileWriter(filepath,true);
+        BufferedWriter bw = new BufferedWriter(fw);
+        PrintWriter printer = new PrintWriter(bw);
         if(opcode[0] == null){
             opcode[0] = " ";
         }
         if(opcode[2] == null) {
             opcode[2] = " ";
         }
-        printer.println(String.format("%8s%8s%8s", opcode[0], opcode[1], opcode[2]));
-
+        String address = decToHex(location);
+        StringBuilder string = new StringBuilder("0000");
+        if (address.length() < 4){
+            string.append(address);
+            string.delete(0,address.length());
+        }
+        printer.append(String.format("%s  %-8s%-8s%-8s\n",string.toString(), opcode[0],opcode[1],opcode[2]));
         printer.close();
-        return true;
     }
 
+    //method to write to the final listing file
     private static boolean writeListing(String[] opcode) throws IOException{
         String filepath = System.getProperty("user.dir") + "/pass2Intermediate";        //creates ands to an intermediate file
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
@@ -264,9 +290,11 @@ public class Assembler {
         printer.close();
         return true;
     }
+
+    //method that checks if an op code's mnemonic is in the OPTABLE
     private static Operation searchOPTABLE(String mnemonic){
         Operation tempOp = opTable.getOperation(mnemonic);
-        if(mnemonic == tempOp.mnemonic()){
+        if(mnemonic.equals(tempOp.mnemonic())){
             return tempOp;
         }
         else{
@@ -274,13 +302,44 @@ public class Assembler {
             return null;
         }
     }
+
+    //method that checks if a label is in the SYMTABLE
     private static Label searchSYMTABLE(String compare){
-        for (Label label: symTable){
-            if(label.name.equals(compare)){
-              return label;
+        if(!(symTable.size() == 0)){
+            for (Label label : symTable) {
+                if (label.name!= null && label.name.equals(compare)) {
+                    return label;
+                }
             }
         }
         return null;
     }
+
+    //method to convert a hex number represented by a string to it's integer value
+    private static int hexToDec(String hex){
+        char[] hexChars = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+        int decimal = 0;
+        for(int i = hex.length()-1; i >= 0; i--){
+            for(int j = 0; j < hexChars.length; j++){
+                if(hex.charAt(i) == hexChars[j]){
+                    decimal += j*Math.pow(16,hex.length()-i-1);
+                    break;
+                }
+            }
+        }
+        return decimal;
+    }
+
+    //method to convert a decimal integer into a hex string
+    private static String decToHex(int decimal){
+        char[] hexChars = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+        int remainder;
+        StringBuilder hexNum = new StringBuilder();
+        while(decimal > 0){
+            remainder = decimal%16;
+            hexNum.append(hexChars[remainder]);
+            decimal /= 16;
+        }
+        return hexNum.toString();
+    }
 }
-// This is a test comment
