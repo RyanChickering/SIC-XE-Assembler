@@ -281,7 +281,7 @@ public class Assembler {
 
     //method to write to the final listing file
     private static boolean writeListing(String[] opcode) throws IOException{
-        String filepath = System.getProperty("user.dir") + "/pass2Intermediate";        //creates ands to an intermediate file
+        String filepath = System.getProperty("user.dir") + "/pass2Listing";        //creates ands to an intermediate file
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         if (opcode[1].equals("RESW")|| (opcode[1].equals("START")) || (opcode[1].equals("END"))){
             opcode[1] = " ";
