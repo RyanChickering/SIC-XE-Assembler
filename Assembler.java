@@ -91,7 +91,7 @@ public class Assembler {
                     int oplength;
                     String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].indexOf("''"));
                     oplength = s.length();
-                    locctr += opcode[2].length();
+                    locctr += oplength;
                 } else {
                     throw new invalidOPException();
                     //error not a real thing
