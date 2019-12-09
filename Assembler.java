@@ -55,25 +55,24 @@ public class Assembler {
                 if(opcode[0] != null && searchSYMTABLE(opcode[0]) != null){
                     throw new ErrorDuplicateLabelException();
                 } else {
-                    Label label = new Label(opcode[0],locctr);
+                    Label label = new Label(opcode[2],locctr);
                     symTable.add(label);
                 }
                 boolean extended = false;
                 if(opcode[1].substring(0,1).equals("+")){
-                    opcode[1] = opcode[1].substring(1);
                     extended = true;
                 }
                 writeIntermediate(locctr, opcode);
                 if(searchOPTABLE(opcode[1]) != null){
                     Operation opcodeInfo = searchOPTABLE(opcode[1]);
                     if(extended){
-                        locctr += 12;
+                        locctr += 4;
                     } else if(opcodeInfo.format().equals("2")){
-                        locctr += 6;
+                        locctr += 2;
                     } else if(opcodeInfo.format().equals("1")){
-                        locctr += 3;
+                        locctr += 1;
                     } else if(opcodeInfo.format().equals("3")){
-                        locctr += 9;
+                        locctr += 3;
                     }
                 } else if(opcode[1].equals("WORD")){
                     locctr += 3;
@@ -81,6 +80,7 @@ public class Assembler {
                     locctr += 3*Integer.parseInt(opcode[2]);
                 } else if(opcode[1].equals("RESB")){
                     locctr += Integer.parseInt(opcode[2]);
+                    //TODO: Figure out how this works (also how word works)
                 } else if(opcode[1].equals("BYTE")){
                     //find length of operand
                     locctr += opcode[2].length();
@@ -90,8 +90,8 @@ public class Assembler {
                 }
                 opcode = opcodeParser(nextLine());
             }
-            writeIntermediate(locctr, opcode);
         }
+        writeIntermediate(locctr, opcode);
         progLength = locctr - startLoc;
     }
 
@@ -112,16 +112,21 @@ public class Assembler {
         int opNum = 0;
         int base = 0;
         int location = 0;
+        int start = 0;
         while(!(opCode[1].equals("END"))){
-            opCode = pass2Parser(nextLine());
             //Checks if comment
             //check to see if the opcode is in the optable
             if(searchOPTABLE(opCode[1]) != null){
                 //check if the opcode if for a register to register function
                 if(searchOPTABLE(opCode[1]).format().equals("2")){
                     //if it is, then convert the two registers into a single integer that
-                    if(opCode[2].indexOf(",") != -1) {
-                        location = getRegisterNum(opCode[2].substring(0, opCode[2].indexOf(","))) * 10;
+                    if(opCode[2].contains(",")) {
+                        String part1 = opCode[2].substring(0,opCode[2].indexOf(","));
+                        if(searchSYMTABLE(part1) != null){
+                            location = searchSYMTABLE(part1).location;
+                        } else if(getRegisterNum(part1) != -1){
+                            location = getRegisterNum(part1)*10;
+                        }
                         location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")));
                     } else {
                         location = getRegisterNum(opCode[2]);
@@ -150,10 +155,14 @@ public class Assembler {
                 //conver the opcode and format of the opcode into their integer forms
                 int opVal = hexToDec(opCode[1]);
                 int format = Integer.parseInt(searchOPTABLE(opCode[1]).format());
+                int nexAddy = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
                 //create a new object code based on the opcode, the operand value, the format, and the base
-                ObjectCode objectCode = new ObjectCode(opVal,location,base, searchOPTABLE(opCode[1]).format(),opCode[2]);
+                ObjectCode objectCode = new ObjectCode(opVal,location,base, searchOPTABLE(opCode[1]).format(),opCode[2]/*,nextAddy*/);
                 //as long as the text record hasn't exceeded it's length
                 if(textRecord.length() < (59+opNum)){
+                    if(textRecord.length() == 0){
+                        start = hexToDec(opCode[3]);
+                    }
                     //add the object code to the text record
                     textRecord.append("^");
                     textRecord.append(objectCode.toString());
@@ -161,9 +170,10 @@ public class Assembler {
                     opNum++;
                 } else {
                     //if the text record will get too big, print out the line and start a new one
-                    writeListing(textRecord.toString());
+                    writeListing(textRecord.toString(), start, hexToDec(opCode[3]));
                     textRecord = new StringBuilder();
                     textRecord.append(objectCode.toString());
+                    start = 0;
                     opNum = 0;
                 }
                 //check the base, if you have the base, update the base.
@@ -181,8 +191,13 @@ public class Assembler {
                 opCode[2] += opCode[2].substring(0, opCode[2].indexOf("'"));
                 textRecord.append(opCode[2]);
             }
-            writeEndRecord();
+            opCode = pass2Parser(nextLine());
         }
+        if(textRecord.length() > 0) {
+            System.out.println(textRecord);
+            writeListing(textRecord.toString(), start, hexToDec(opCode[3]));
+        }
+        writeEndRecord();
     }
 
     //method that reads in all the lines from a file
@@ -208,7 +223,7 @@ public class Assembler {
         String[] out = new String[3];
         out[0] = line; out[1] = line; out[2] = line;
         //if the line starts with a space(not a label) skip spaces until you hit something
-        if(out[1].indexOf(' ') == 0){
+        if(out[0].indexOf(' ') == 0){
             out[1] = spaceIterator(line);
             out[0] = null;
         } else {
@@ -310,15 +325,17 @@ public class Assembler {
         return string.toString();
     }
     //method to write to the final listing file
-    private static void writeListing(String opcodes) throws IOException{
+    private static void writeListing(String opcodes, int start, int end) throws IOException{
         String filepath = System.getProperty("user.dir") + "/out.sic";
         FileWriter fw = new FileWriter(filepath,true);
         BufferedWriter bw = new BufferedWriter(fw);
         PrintWriter printer = new PrintWriter(bw);
         StringBuilder string = new StringBuilder();
         string.append("T^");
-        string.append(locctr);
+        string.append(padWith0s(decToHex(start)));
         string.append("^");
+        String hexLength = decToHex(end-start);
+        string.append(hexLength);
         string.append(opcodes);
         string.append("\n");
         printer.append(string);
@@ -383,7 +400,7 @@ public class Assembler {
         StringBuilder hexNum = new StringBuilder();
         while(decimal > 0){
             remainder = decimal%16;
-            hexNum.append(hexChars[remainder]);
+            hexNum.insert(0,hexChars[remainder]);
             decimal /= 16;
         }
         return hexNum.toString();

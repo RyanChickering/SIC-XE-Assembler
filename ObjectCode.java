@@ -134,19 +134,16 @@ public class ObjectCode {
         }
         else if(format.equals("3")){
             // n = 0, i = 0
-            if(n == false && i == false){
-                //do nothing
-            }
             // n = 0, i = 1
-            else if(n == false && i == true){
+            if(!n && i){
                 opCode = opCode + 1;
             }
             // n = 1, i = 0
-            else if(n == true && i == false){
+            else if(n && !i){
                 opCode = opCode + 2;
             }
             // n = 1, i = 1
-            else if(n == true && i == true) {
+            else if(n && i) {
                 opCode = opCode + 3;
             }
             //TODO add disp to end
@@ -155,19 +152,19 @@ public class ObjectCode {
         }
         else if(format.equals("4")){
             // n = 0, i = 0
-            if(n == false && i == false){
+            if(!n && !i){
                 //do nothing
             }
             // n = 0, i = 1
-            else if(n == false && i == true){
+            else if(!n && i){
                 opCode = opCode + 1;
             }
             // n = 1, i = 0
-            else if(n == true && i == false){
+            else if(n && !i){
                 opCode = opCode + 2;
             }
             // n = 1, i = 1
-            else if(n == true && i == true) {
+            else {
                 opCode = opCode + 3;
             }
             //TODO add address to end
