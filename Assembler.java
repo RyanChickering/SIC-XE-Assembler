@@ -89,8 +89,9 @@ public class Assembler {
                 } else if(opcode[1].equals("BYTE")){
                     //find length of operand
                     int oplength;
-                    String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].indexOf("''"));
-                    oplength = s.length();
+                    String s = opcode[2];
+                    String slen = s.substring(s.indexOf("'") + 1, s.indexOf("''"));
+                    oplength = slen.length();
                     locctr += oplength;
                 } else {
                     throw new invalidOPException();
@@ -106,7 +107,7 @@ public class Assembler {
                         name = opcode[2].substring(1,index);
                         value = opcode[2].substring(index, opcode[2].lastIndexOf('\''));
                         length = value.length();
-                        int i = Integer.parseInt(value);
+                        int i = hexToDec(value);
                         LITTAB.add(name,i,length);
                     }
                 }
