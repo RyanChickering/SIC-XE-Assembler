@@ -22,7 +22,7 @@ public class Assembler {
             System.exit(1);
         }
         catch(ErrorDuplicateLabelException e){
-            System.out.println("Duplicate labels are found");
+            System.out.println("Duplicate labels are found you bitch");
             System.exit(1);
         }
         try {

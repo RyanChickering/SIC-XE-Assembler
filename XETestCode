@@ -1,6 +1,6 @@
 Labelel START   40    .This is a comment
         TIXR
-       CLEAR   X
+        CLEAR   X
         CLEAR   A
         LDCH    =X’00’
         RMO     A,S
