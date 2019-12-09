@@ -11,7 +11,7 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException{
+    public static void main(String[]args) throws IOException, invalidOPException, undefinedSymbolException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
         try {
@@ -25,17 +25,10 @@ public class Assembler {
             System.out.println("Duplicate labels are found you bitch");
             System.exit(1);
         }
-        try {
-
-            pass2();
-            //Deletes the intermediate file
-            File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
-            //intermediateFile.delete();
-        }
-        catch(undefinedSymbolException e){
-            System.out.println("Symbol is undefined you fuck");
-            System.exit(1);
-        }
+        pass2();
+        //Deletes the intermediate file
+        File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
+        intermediateFile.delete();
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
@@ -71,105 +64,125 @@ public class Assembler {
                     extended = true;
                 }
                 writeIntermediate(locctr, opcode);
-                Operation opcodeInfo = searchOPTABLE(opcode[1]);
-                if(opcodeInfo != null){
+                if(searchOPTABLE(opcode[1]) != null){
+                    Operation opcodeInfo = searchOPTABLE(opcode[1]);
                     if(extended){
                         locctr += 12;
                     } else if(opcodeInfo.format().equals("2")){
                         locctr += 6;
                     } else if(opcodeInfo.format().equals("1")){
                         locctr += 3;
-                    } else if(opcodeInfo.format().equals("3/4")){
+                    } else if(opcodeInfo.format().equals("3")){
                         locctr += 9;
                     }
                 } else if(opcode[1].equals("WORD")){
                     locctr += 3;
                 } else if(opcode[1].equals("RESW")){
-                    locctr += 3*Integer.parseInt(opcode[3]);
+                    locctr += 3*Integer.parseInt(opcode[2]);
                 } else if(opcode[1].equals("RESB")){
-                    locctr += Integer.parseInt(opcode[3]);
+                    locctr += Integer.parseInt(opcode[2]);
                 } else if(opcode[1].equals("BYTE")){
                     //find length of operand
-                    locctr += opcode[3].length();
+                    locctr += opcode[2].length();
                 } else {
                     throw new invalidOPException();
                     //error not a real thing
                 }
                 opcode = opcodeParser(nextLine());
             }
+            writeIntermediate(locctr, opcode);
         }
         progLength = locctr - startLoc;
     }
 
     private static void pass2() throws IOException, undefinedSymbolException{
-        int operandLoc;
         lineCnt = 0;
         getLines(System.getProperty("user.dir") + "/pass1Intermediate");
+        createListing();
+        lineCnt = 0;
         String[] opCode = pass2Parser((nextLine()));
         if(opCode[1].equals("START")){
-            writeListing(opCode);
             locctr = Integer.parseInt(opCode[2]);
-            opCode = opcodeParser(nextLine());
+            opCode = pass2Parser(nextLine());
         }
         else{
             locctr = 0;
         }
+        StringBuilder textRecord = new StringBuilder();
+        int opNum = 0;
+        int base = 0;
+        int location = 0;
         while(!(opCode[1].equals("END"))){
-            opCode = opcodeParser(nextLine());
+            opCode = pass2Parser(nextLine());
             //Checks if comment
+            //check to see if the opcode is in the optable
             if(searchOPTABLE(opCode[1]) != null){
-                if(opCode[2] != null) {
-                    if (searchSYMTABLE(opCode[0]) != null) {
-                        //store symbol value as operand address
-                        //operandLoc = opCode[1];
+                //check if the opcode if for a register to register function
+                if(searchOPTABLE(opCode[1]).format().equals("2")){
+                    //if it is, then convert the two registers into a single integer that
+                    if(opCode[2].indexOf(",") != -1) {
+                        location = getRegisterNum(opCode[2].substring(0, opCode[2].indexOf(","))) * 10;
+                        location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")));
                     } else {
-                        operandLoc = 0;
+                        location = getRegisterNum(opCode[2]);
+                    }
+                }
+                //check if there is a symbol in the operand field
+                if(opCode[2] != null) {
+                    //check if there is an immediate, if there is convert it to an int
+                    if(opCode[2].charAt(0) == '#'){
+                        opCode[2] = opCode[2].substring(1);
+                        location = hexToDec(opCode[2]);
+                        //check if there is an indirect
+                    } else if(opCode[2].charAt(0) == '@'){
+
+                        //if the thing is not an immediate or indirect, check the symtable to see if that symbol exists.
+                    } else if (searchSYMTABLE(opCode[2]) != null) {
+                        location = searchSYMTABLE(opCode[2]).location;
+                        //if the operand is not an immediate, register, indirect, or valid symbol, throw an exception
+                    } else {
                         throw new undefinedSymbolException();
                     }
+                    //if there is no operand, set the location to 0
                 } else {
-                    operandLoc = 0;
+                    location = 0;
                 }
-                //TODO: Assemble object code instruction method
+                //conver the opcode and format of the opcode into their integer forms
+                int opVal = hexToDec(opCode[1]);
+                int format = Integer.parseInt(searchOPTABLE(opCode[1]).format());
+                //create a new object code based on the opcode, the operand value, the format, and the base
+                ObjectCode objectCode = new ObjectCode(opVal,location,base, searchOPTABLE(opCode[1]).format(),opCode[2]);
+                //as long as the text record hasn't exceeded it's length
+                if(textRecord.length() < (59+opNum)){
+                    //add the object code to the text record
+                    textRecord.append("^");
+                    textRecord.append(objectCode.toString());
+                    //keep track of how many object codes have been added to the current record because the ^ creates a new character
+                    opNum++;
+                } else {
+                    //if the text record will get too big, print out the line and start a new one
+                    writeListing(textRecord.toString());
+                    textRecord = new StringBuilder();
+                    textRecord.append(objectCode.toString());
+                    opNum = 0;
+                }
+                //check the base, if you have the base, update the base.
+            } else if(opCode[1].equals("BASE")){
+                if(searchSYMTABLE(opCode[3])!= null) {
+                    base = (searchSYMTABLE(opCode[3]).location);
+                }
+                //TODO: Find out how this is supposed to work and do it
+            } else if(opCode[1].equals("WORD")){
+                opCode[2] = opCode[2].substring(opCode[2].indexOf("'"));
+                opCode[2] += opCode[2].substring(0, opCode[2].indexOf("'"));
+                textRecord.append(opCode[2]);
+            } else if(opCode[2].equals("BYTE")){
+                opCode[2] = opCode[2].substring(opCode[2].indexOf("'"));
+                opCode[2] += opCode[2].substring(0, opCode[2].indexOf("'"));
+                textRecord.append(opCode[2]);
             }
-            else{
-                operandLoc = 0;
-            }
+            writeEndRecord();
         }
-        /*TODO
-        read first input line
-        if opcode = start
-            write listing line
-            read next input line
-        write header record to object program
-        initialize first text record
-        while opcode != end
-            if this is not a comment line
-                search OPTAB for OPCODE
-                if found
-                    if there is a symbol in the operand field then
-                        search SYMTAB for operand
-                        if found
-                            store symbol value as operand address
-                        else
-                            store 0 as operand address
-                            set error flag(undefined symbol)
-                    else
-                        store 0 as operand address
-                    assemble object code instruction
-                else if OPCODE = byte or word then
-                    convert constant to object code
-                if object code will not fit into the current text record then
-                    write text record to object program
-                    initialize new text record
-                add object code to text record
-            write listing line
-            read next input line
-        write last text record to object program
-        write end record to object program
-        write last listing line
-
-
-         */
     }
 
     //method that reads in all the lines from a file
@@ -181,14 +194,6 @@ public class Assembler {
         else{
             System.out.println("No such file found at " + filename);
         }
-    }
-
-    //TODO: Method that calculates object codes based on info from intermediate file
-    private static void objectCoder(String opcode, String operand){
-        String out;
-        Operation opInfo = searchOPTABLE(opcode);
-        int opValue = Integer.parseInt(opInfo.opcode(), 16);
-
     }
 
     //Method that gets the next line of the program
@@ -285,31 +290,67 @@ public class Assembler {
         printer.append(String.format("%s  %-8s%-8s%-8s\n",string.toString(), opcode[0],opcode[1],opcode[2]));
         printer.close();
     }
-
-    //method to write to the final listing file
-    private static boolean writeListing(String[] opcode) throws IOException{
-        String filepath = System.getProperty("user.dir") + "/pass2Listing";        //creates ands to an intermediate file
+    //Method to create the listing file and initialize it with the header record
+    private static void createListing() throws IOException {
+        String filepath = System.getProperty("user.dir") + "/out.sic";
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
-        if (opcode[1].equals("RESW")|| (opcode[1].equals("START")) || (opcode[1].equals("END"))){
-            opcode[1] = " ";
-        }
-        printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
+        StringBuilder string = new StringBuilder();
+        String[] opcode = pass2Parser(nextLine());
+        String out = String.format("%s%6s%s%s%s%s","H^", (opcode[0]),"^",padWith0s(opcode[3]),"^",padWith0s(decToHex(progLength)));
+        printer.println(out);
         printer.close();
-        return true;
     }
-
+    //Method that fills the front of a string with 0s because apparently string.format can't do that
+    private static String padWith0s(String input){
+        StringBuilder string = new StringBuilder("000000");
+        if (input.length() < 6){
+            string.append(input);
+            string.delete(0,input.length());
+        }
+        return string.toString();
+    }
+    //method to write to the final listing file
+    private static void writeListing(String opcodes) throws IOException{
+        String filepath = System.getProperty("user.dir") + "/out.sic";
+        FileWriter fw = new FileWriter(filepath,true);
+        BufferedWriter bw = new BufferedWriter(fw);
+        PrintWriter printer = new PrintWriter(bw);
+        StringBuilder string = new StringBuilder();
+        string.append("T^");
+        string.append(locctr);
+        string.append("^");
+        string.append(opcodes);
+        string.append("\n");
+        printer.append(string);
+        printer.close();
+    }
+    //Method that finishes off the listing file by printing the ending record
+    private static void writeEndRecord() throws IOException{
+        String filepath = System.getProperty("user.dir") + "/out.sic";
+        FileWriter fw = new FileWriter(filepath,true);
+        BufferedWriter bw = new BufferedWriter(fw);
+        PrintWriter printer = new PrintWriter(bw);
+        StringBuilder string = new StringBuilder();
+        lineCnt = 0;
+        String[] opcode = pass2Parser(nextLine());
+        string.append("E^");
+        string.append(padWith0s(opcode[0]));
+        printer.append(string);
+        printer.close();
+    }
     //method that checks if an op code's mnemonic is in the OPTABLE
     private static Operation searchOPTABLE(String mnemonic){
         Operation tempOp = opTable.getOperation(mnemonic);
-        if(mnemonic.equals(tempOp.mnemonic())){
-            return tempOp;
+        if(tempOp != null) {
+            if (mnemonic.equals(tempOp.mnemonic())) {
+                return tempOp;
+            } else {
+                System.out.println("mnemonic not found");
+                return null;
+            }
         }
-        else{
-            System.out.println("mnemonic not found");
-            return null;
-        }
+        return null;
     }
-
     //method that checks if a label is in the SYMTABLE
     private static Label searchSYMTABLE(String compare){
         if(!(symTable.size() == 0)){
@@ -321,7 +362,6 @@ public class Assembler {
         }
         return null;
     }
-
     //method to convert a hex number represented by a string to it's integer value
     private static int hexToDec(String hex){
         char[] hexChars = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
@@ -336,7 +376,6 @@ public class Assembler {
         }
         return decimal;
     }
-
     //method to convert a decimal integer into a hex string
     private static String decToHex(int decimal){
         char[] hexChars = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
@@ -348,5 +387,36 @@ public class Assembler {
             decimal /= 16;
         }
         return hexNum.toString();
+    }
+    //method to convert a register's name to it's value.
+    public static int getRegisterNum(String register) {
+        if (register.equals("A")) {
+            return 0;
+        }
+        if (register.equals("X")) {
+            return 1;
+        }
+        if (register.equals("L")) {
+            return 2;
+        }
+        if (register.equals("PC")) {
+            return 8;
+        }
+        if (register.equals("SW")) {
+            return 9;
+        }
+        if (register.equals("B")) {
+            return 3;
+        }
+        if (register.equals("S")) {
+            return 4;
+        }
+        if (register.equals("T")) {
+            return 5;
+        }
+        if (register.equals("F")) {
+            return 6;
+        }
+        return -1;
     }
 }

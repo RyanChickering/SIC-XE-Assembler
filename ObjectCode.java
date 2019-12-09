@@ -1,8 +1,7 @@
 public class ObjectCode {
 
     private static int opCode;
-    private static int TA;
-    private static int PC;
+    private static int address;
     private static int base;
     private static String format;
     private static String operand;
@@ -16,8 +15,7 @@ public class ObjectCode {
 
     public ObjectCode(){
         opCode = 0;
-        TA = 0;
-        PC = 0;
+        address = 0;
         base = 0;
         format = "";
         operand = "";
@@ -29,10 +27,9 @@ public class ObjectCode {
         e = false;
     }
 
-    public ObjectCode(int opCode, int TA, int PC, int base, String format, String operand){
+    public ObjectCode(int opCode, int address, int base, String format, String operand){
         this.opCode = opCode;
-        this.TA = TA;
-        this.PC = PC;
+        this.address = address;
         this.base = base;
         this.format = format;
         this.operand = operand;
@@ -58,16 +55,7 @@ public class ObjectCode {
                     p = false;
                 }
                 else {
-                    // checks for base or pc relative
-                    if(TA - PC > 2048){
-                        PC = base;
-                        b = true;
-                        p = false;
-                    }
-                    else{
-                        b = false;
-                        p = true;
-                    }
+                    //TODO: check for base or pc relative
                 }
             }
             // checks if immediate
@@ -81,16 +69,7 @@ public class ObjectCode {
                     p = false;
                 }
                 else {
-                    // checks for base or pc relative
-                    if(TA - PC > 2048){
-                        PC = base;
-                        b = true;
-                        p = false;
-                    }
-                    else{
-                        b = false;
-                        p = true;
-                    }
+                    //TODO: check for base or pc relative
                 }
             }
             // simple otherwise
@@ -109,16 +88,7 @@ public class ObjectCode {
                         p = false;
                     }
                     else{
-                        // checks for base or pc relative
-                        if(TA - PC > 2048){
-                            PC = base;
-                            b = true;
-                            p = false;
-                        }
-                        else{
-                            b = false;
-                            p = true;
-                        }
+                        //TODO: check for base or pc relative
                     }
                 }
             }
@@ -155,14 +125,11 @@ public class ObjectCode {
     }
 
     public static String printObjectCode(){
-        setFlags();
-        int intDisplay;
-        String stringDisplay;
         if(format.equals("1")) {
             return decToHex(opCode);
         }
         else if(format.equals("2")){
-            return decToHex(opCode) + " " + " ";
+            decToHex(opCode);
             //TODO: add r1 and r2 to the end
         }
         else if(format.equals("3")){
@@ -182,9 +149,9 @@ public class ObjectCode {
             else if(n == true && i == true) {
                 opCode = opCode + 3;
             }
-            intDisplay = TA - PC;
-            stringDisplay = decToHex(intDisplay).substring(1);
-            return decToHex(opCode) + binToHex(flagConverter()) + stringDisplay;
+            //TODO add disp to end
+            //TODO calculate display; disp = TA - PC
+            return decToHex(opCode) + binToHex(flagConverter()) + "";
         }
         else if(format.equals("4")){
             // n = 0, i = 0
@@ -203,9 +170,9 @@ public class ObjectCode {
             else if(n == true && i == true) {
                 opCode = opCode + 3;
             }
-            intDisplay = TA - PC;
-            stringDisplay = decToHex(intDisplay);
-            return decToHex(opCode) + binToHex(flagConverter()) + "0" + stringDisplay;
+            //TODO add address to end
+            //TODO calculate display; disp = TA - PC
+            return decToHex(opCode) + binToHex(flagConverter()) + "0" + "";
         }
         return null;
     }
