@@ -110,9 +110,11 @@ public class Assembler {
                         LITTAB.add(name,i,length);
                     }
                 }
+
                 opcode = opcodeParser(nextLine());
             }
         }
+        
         writeIntermediate(locctr, opcode);
         progLength = locctr - startLoc;
     }
