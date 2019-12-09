@@ -159,11 +159,10 @@ public class ObjectCode {
         int intDisplay;
         String stringDisplay;
         if(format.equals("1")) {
-            return decToHex(opCode);
+            return Integer.toHexString(opCode);
         }
         else if(format.equals("2")){
-            decToHex(opCode);
-            //TODO: add r1 and r2 to the end
+            return Integer.toHexString(opCode) + Integer.toHexString(TA).toUpperCase();
         }
         else if(format.equals("3")){
             // n = 0, i = 0
@@ -180,8 +179,8 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
-            stringDisplay = decToHex(intDisplay).substring(1);
-            return decToHex(opCode) + binToHex(flagConverter()) + stringDisplay;
+            stringDisplay = Integer.toHexString(intDisplay).substring(1).toUpperCase();
+            return Integer.toHexString(intDisplay).toUpperCase() + binToHex(flagConverter()).toUpperCase() + stringDisplay;
         }
         else if(format.equals("4")){
             // n = 0, i = 0
@@ -201,8 +200,8 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
-            stringDisplay = decToHex(intDisplay);
-            return decToHex(opCode) + binToHex(flagConverter()) + stringDisplay;
+            stringDisplay = Integer.toHexString(intDisplay).toUpperCase();
+            return Integer.toHexString(opCode).toUpperCase() + binToHex(flagConverter()).toUpperCase() + "0" + stringDisplay;
         }
         return null;
     }
@@ -221,33 +220,6 @@ public class ObjectCode {
         return binary;
     }
 
-    private static int hexToDec(String hex){
-        char[] hexChars = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-        int decimal = 0;
-        for(int i = hex.length()-1; i >= 0; i--){
-            for(int j = 0; j < hexChars.length; j++){
-                if(hex.charAt(i) == hexChars[j]){
-                    decimal += j*Math.pow(16,hex.length()-i-1);
-                    break;
-                }
-            }
-        }
-        return decimal;
-    }
-
-    //method to convert a decimal integer into a hex string
-    private static String decToHex(int decimal){
-        char[] hexChars = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-        int remainder;
-        StringBuilder hexNum = new StringBuilder();
-        while(decimal > 0){
-            remainder = decimal%16;
-            hexNum.append(hexChars[remainder]);
-            decimal /= 16;
-        }
-        return hexNum.toString();
-    }
-
     private static String binToHex(String binary){
         int decimal = 0;
         for(int i = binary.length()-1; i >= 0; i--){
@@ -255,6 +227,6 @@ public class ObjectCode {
                 decimal += Math.pow(2,binary.length()-i-1);
             }
         }
-        return decToHex(decimal);
+        return Integer.toHexString(decimal);
     }
 }
