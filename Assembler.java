@@ -88,7 +88,10 @@ public class Assembler {
                     //TODO: Figure out how this works (also how word works)
                 } else if(opcode[1].equals("BYTE")){
                     //find length of operand
-                    locctr += opcode[2].length();
+                    int oplength;
+                    String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].indexOf("''"));
+                    oplength = s.length();
+                    locctr += oplength;
                 } else {
                     throw new invalidOPException();
                     //error not a real thing
