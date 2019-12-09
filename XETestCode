@@ -1,6 +1,6 @@
-        START   4000    .This is a comment
+Labelel START   40    .This is a comment
         TIXR
-Label   CLEAR   X
+       CLEAR   X
         CLEAR   A
         LDCH    =X’00’
         RMO     A,S
