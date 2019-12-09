@@ -123,8 +123,8 @@ public class ObjectCode {
             }
         }
     }
-
-    public static String printObjectCode(){
+    @Override
+    public String toString(){
         if(format.equals("1")) {
             return decToHex(opCode);
         }
