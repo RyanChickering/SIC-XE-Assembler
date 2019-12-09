@@ -1,9 +1,17 @@
-COPY    LDT     #11
-        LDX     #0
-MOVECH  LDCH    STR1,X
-        STCH    STR2,X
+Labelel START   40    .This is a comment
+        TIXR
+       CLEAR   X
+        CLEAR   A
+        LDCH    =X’00’
+        RMO     A,S
+        +LDT    #1024
+$AALOOP TD      =X’F1’
+        JEQ     $AALOOP
+        RD      =X’F1’
+        COMPR   A,S
+        JEQ     $AAEXIT
+        STCH    BUFFER,X
         TIXR    T
-        JLT     MOVECH
-STR1    BYTE    C'TEST STRING'
-STR2    RESB    11
+        JLT     $AALOOP
+$AAEXIT STX     LENGTH
         END
