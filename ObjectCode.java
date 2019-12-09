@@ -162,7 +162,7 @@ public class ObjectCode {
             return decToHex(opCode);
         }
         else if(format.equals("2")){
-            decToHex(opCode);
+            return decToHex(opCode);
             //TODO: add r1 and r2 to the end
         }
         else if(format.equals("3")){
@@ -180,7 +180,7 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
-            stringDisplay = decToHex(intDisplay).substring(1);
+            stringDisplay = Integer.toHexString(intDisplay).substring(1);
             return decToHex(opCode) + binToHex(flagConverter()) + stringDisplay;
         }
         else if(format.equals("4")){
@@ -201,7 +201,7 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
-            stringDisplay = decToHex(intDisplay);
+            stringDisplay = Integer.toHexString(intDisplay);
             return decToHex(opCode) + binToHex(flagConverter()) + stringDisplay;
         }
         return null;

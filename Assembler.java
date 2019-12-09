@@ -28,7 +28,7 @@ public class Assembler {
         pass2();
         //Deletes the intermediate file
         File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
-        intermediateFile.delete();
+        //intermediateFile.delete();
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
@@ -168,6 +168,7 @@ public class Assembler {
                 } else {
                     location = 0;
                 }
+                
                 //conver the opcode and format of the opcode into their integer forms
                 int opVal = hexToDec(opCode[1]);
                 int format = Integer.parseInt(searchOPTABLE(opCode[1]).format());
