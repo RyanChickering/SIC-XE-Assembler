@@ -13,7 +13,7 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
 
-    public static void main(String[]args) throws IOException, invalidOPException{
+    public static void main(String[]args) throws IOException{
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
         try {
@@ -27,7 +27,14 @@ public class Assembler {
             System.out.println("Duplicate labels are found");
             System.exit(1);
         }
-        pass2();
+
+        try {
+            pass2("pass1Intermediate");
+        }
+        catch(undefinedSymbolException e){
+            System.out.println("The symbol is undefined you fuck");
+            System.exit(1);
+        }
     }
 
 
@@ -92,7 +99,55 @@ public class Assembler {
         progLength = locctr - startLoc;
     }
 
-    private static void pass2(){
+    private static void pass2(String fileName) throws IOException, undefinedSymbolException{
+        int operandLoc;
+        getLines(fileName);
+        String[] opCode = opcodeParser((nextLine()));
+        if(opCode[1].equals("START")){
+            writeListing(opCode);
+            locctr = Integer.parseInt(opCode[2]);
+            opCode = opcodeParser(nextLine());
+        }
+        else{
+            locctr = 0;
+        }
+        while(opCode[1].equals("END") == false){
+            opCode = opcodeParser(nextLine());
+            //Checks if comment
+            if(searchOPTABLE(opCode[2]) != null) {
+                if (opCode[3] != null) {
+                    if (searchSYMTABLE(opCode[0]) != null) {
+                        //store symbol value as operand address
+                        //operandLoc = opCode[1];
+                    } else {
+                        operandLoc = 0;
+                        throw new undefinedSymbolException();
+                    }
+                }
+                else{
+                    operandLoc = 0;
+                }
+                //TODO Assemble object code instruction
+            }
+            else if(opCode[1].equals("WORD")){
+                //convert to Object Code
+            }
+            else if(opCode[1].equals("BYTE")){
+                //convert to Object Code
+            }
+            //if object code will not fit into the current text record then
+            //                    write text record to object program
+            //                    initialize new text record
+            writeListing(opCode);
+            opCode = opcodeParser(nextLine());
+        }
+        writeListing(opCode);
+        //        write last text record to object program
+        //        write end record to object program
+        //        write last listing line
+
+
+
         /*TODO
         read first input line
         if opcode = start
@@ -203,7 +258,7 @@ public class Assembler {
         String filepath = System.getProperty("user.dir") + "/pass2Intermediate";        //creates ands to an intermediate file
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         if (opcode[1].equals("RESW")|| (opcode[1].equals("START")) || (opcode[1].equals("END"))){
-            return false;
+            opcode[1] = " ";
         }
         printer.println(String.format("%8s%8s%8s",opcode[0],opcode[1],opcode[2]));
         printer.close();

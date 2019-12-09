@@ -9,6 +9,7 @@ public class OPTable {
     static{
         _OPTable = new HashMap<>();
 
+
         _OPTable.put("ADD",   new Operation("ADD",   "3/4", "18"));
         _OPTable.put("ADDF",  new Operation("ADDF",  "3/4", "58"));
         _OPTable.put("ADDR",  new Operation("ADDR",  "2",   "90"));
