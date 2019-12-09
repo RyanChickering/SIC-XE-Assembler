@@ -180,7 +180,7 @@ public class ObjectCode {
             }
             intDisplay = TA - PC;
             stringDisplay = Integer.toHexString(intDisplay).substring(1).toUpperCase();
-            return Integer.toHexString(intDisplay).toUpperCase() + binToHex(flagConverter()).toUpperCase() + stringDisplay;
+            return Integer.toHexString(opCode).toUpperCase() + binToHex(flagConverter()).toUpperCase() + stringDisplay;
         }
         else if(format.equals("4")){
             // n = 0, i = 0
@@ -221,12 +221,7 @@ public class ObjectCode {
     }
 
     private static String binToHex(String binary){
-        int decimal = 0;
-        for(int i = binary.length()-1; i >= 0; i--){
-            if(binary.charAt(i) == '1'){
-                decimal += Math.pow(2,binary.length()-i-1);
-            }
-        }
+        int decimal = Integer.parseInt(binary,2);
         return Integer.toHexString(decimal);
     }
 }
