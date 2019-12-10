@@ -81,6 +81,8 @@ public class Assembler {
                     locctr += 4;
                 } else if(opcode[1].equals("WORD")){
                     locctr += 3;
+                } else if(opcode[1].equals("BASE")) {
+                    locctr += 0;
                 } else if(opcode[1].equals("RESW")){
                     locctr += 3*Integer.parseInt(opcode[2]);
                 } else if(opcode[1].equals("RESB")){
@@ -141,6 +143,11 @@ public class Assembler {
             //Checks if comment
             //check to see if the opcode is in the optable
             StringBuilder string = new StringBuilder();
+            boolean extended = false;
+            if(opCode[1].charAt(0) == '+'){
+                extended = true;
+                opCode[1] = opCode[1].substring(1);
+            }
             if(searchOPTABLE(opCode[1]) != null){
                 //check if the opcode if for a register to register function
                 if(searchOPTABLE(opCode[1]).format().equals("2")){
@@ -190,9 +197,15 @@ public class Assembler {
                 //conver the opcode and format of the opcode into their integer forms
                 int opVal = Integer.parseInt(searchOPTABLE(opCode[1]).opcode(),16);
                 int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
+                String format;
+                if(extended){
+                    format = "4";
+                } else {
+                    format = searchOPTABLE(opCode[1]).format();
+                }
                 //create a new object code based on the opcode, the operand value, the format, and the base
                 //object code, target address, pc address, base address, String format, String operand
-                ObjectCode objectCode = new ObjectCode(opVal,location,programCount, base, searchOPTABLE(opCode[1]).format(),opCode[2]);
+                ObjectCode objectCode = new ObjectCode(opVal,location,programCount, base, format,opCode[2]);
                 //as long as the text record hasn't exceeded it's length
                 if(textRecord.length() < (59+opNum)){
                     if(textRecord.length() == 0){

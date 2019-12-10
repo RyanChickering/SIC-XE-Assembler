@@ -1,0 +1,23 @@
+COPY    START   0
+FIRST   STL     RETADR
+        LDB     #LENGTH
+        BASE    LENGTH
+CLOOP   +JSUB   LENGTH
+        LDA     LENGTH
+        COMP    #0
+        JEQ     ENDFIL
+        +JSUB   BUFFER
+        J       CLOOP
+ENDFIL  LDA     EOF
+        STA     BUFFER
+        LDA     #3
+        STA     LENGTH
+        +JSUB   BUFFER
+        J       @RETADR
+EOF     BYTE    C'EOF'
+RETADR  RESW    1
+LENGTH  RESW    1
+BUFFER  RESB    4096
+BUFEND  RESB    11
+MAXLEN  RESW    11
+        END
