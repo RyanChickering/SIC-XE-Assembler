@@ -158,14 +158,17 @@ public class ObjectCode {
         setFlags();
         int intDisplay;
         String stringDisplay;
+        String opCodeString;
         if(format.equals("1")) {
-            return Integer.toHexString(opCode);
+            opCodeString = Integer.toHexString(opCode).toUpperCase();
+            return padWith2_0s(opCodeString);
         }
         else if(format.equals("2")){
             String hexDisplay = Integer.toHexString(TA);
             String temp = padWith2_0s(hexDisplay);
             stringDisplay = temp.toUpperCase();
-            return Integer.toHexString(opCode) + stringDisplay;
+            opCodeString = Integer.toHexString(opCode).toUpperCase();
+            return padWith2_0s(opCodeString) + stringDisplay;
         }
         else if(format.equals("3")){
             // n = 0, i = 1
@@ -185,7 +188,8 @@ public class ObjectCode {
             String temp = padWith4_0s(hexDisplay);
             stringDisplay = temp.substring(1).toUpperCase();
             String binaryNumber = flagConverter();
-            return Integer.toHexString(opCode).toUpperCase() + binToHex(binaryNumber).toUpperCase() + stringDisplay;
+            opCodeString = Integer.toHexString(opCode).toUpperCase();
+            return padWith2_0s(opCodeString) + binToHex(binaryNumber).toUpperCase() + stringDisplay;
         }
         else if(format.equals("4")){
             // n = 0, i = 0
@@ -208,7 +212,8 @@ public class ObjectCode {
             String hexDisplay = Integer.toHexString(intDisplay);
             String temp = padWith4_0s(hexDisplay);
             stringDisplay = temp.toUpperCase();
-            return Integer.toHexString(opCode).toUpperCase() + binToHex(flagConverter()).toUpperCase() + "0" + stringDisplay;
+            opCodeString = Integer.toHexString(opCode).toUpperCase();
+            return padWith2_0s(opCodeString) + binToHex(flagConverter()).toUpperCase() + "0" + stringDisplay;
         }
         return null;
     }
