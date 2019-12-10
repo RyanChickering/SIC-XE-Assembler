@@ -1,3 +1,4 @@
+CHARCP  START   4000
         LDT     #11
         LDX     #0
 MOVECH  LDCH    STR1,X

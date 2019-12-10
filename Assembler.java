@@ -38,7 +38,7 @@ public class Assembler {
         String[] opcode = opcodeParser(nextLine());
         //checks if there is a different start location than 0
         if(opcode[1].equals("START")){
-            locctr = hexToDec(opcode[2]);
+            locctr = Integer.parseInt(opcode[2],16);
             writeIntermediate(locctr, opcode);
             opcode = opcodeParser(nextLine());
         } else {
@@ -168,18 +168,16 @@ public class Assembler {
                     } else if(opCode[2].charAt(0) == '@'){
 
                         //if the thing is not an immediate or indirect, check the symtable to see if that symbol exists.
+                        //check to see if there are multiple fields
                     } else if(opCode[2].contains(",")){
-                        String part1 = opCode[2].substring(0,opCode[2].indexOf(","));
-                        if(searchSYMTABLE(part1) != null){
-                            location = searchSYMTABLE(part1).location;
-                        } else if(getRegisterNum(part1) != -1){
-                            location = getRegisterNum(part1)*10;
-                        }
+                        String field1 = opCode[2].substring(0,opCode[2].indexOf(","));
+                        String field2 = opCode[2].substring(opCode[2].indexOf(",")+1);
+
                     } else if (searchSYMTABLE(opCode[2]) != null) {
                         location = searchSYMTABLE(opCode[2]).location;
                         //if the operand is not an immediate, register, indirect, or valid symbol, throw an exception
                     } else if(getRegisterNum(opCode[2])!= -1){
-                      location = getRegisterNum(opCode[2]);
+                      location = getRegisterNum(opCode[2])*10;
                     } else {
                         throw new undefinedSymbolException();
                     }
@@ -426,8 +424,9 @@ public class Assembler {
         if (input.length() < 6){
             string.append(input);
             string.delete(0,input.length());
+            return string.toString();
         }
-        return string.toString();
+        return input;
     }
     //method to write to the final listing file
     private static void writeListing(String opcodes, int start, int end) throws IOException{
