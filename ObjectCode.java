@@ -263,7 +263,7 @@ public class ObjectCode {
     }
 
     private static String until6Shaver(String string){
-        string = string.substring(string.length() - 5,string.length());
+        string = string.substring(string.length() - 4,string.length());
         return string;
     }
 
