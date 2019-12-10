@@ -89,7 +89,7 @@ public class Assembler {
                 } else if(opcode[1].equals("BYTE")){
                     //find length of operand
                     int oplength;
-                    String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].indexOf("''"));
+                    String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].lastIndexOf("'"));
                     oplength = s.length();
                     locctr += oplength;
                 } else {
@@ -140,57 +140,11 @@ public class Assembler {
         while(!(opCode[1].equals("END"))){
             //Checks if comment
             //check to see if the opcode is in the optable
+            StringBuilder string = new StringBuilder();
             if(searchOPTABLE(opCode[1]) != null){
-                //check if the opcode if for a register to register function
-                if(searchOPTABLE(opCode[1]).format().equals("2")){
-                    //if it is, then convert the two registers into a single integer that
-                    if(opCode[2].contains(",")) {
-                        String part1 = opCode[2].substring(0,opCode[2].indexOf(","));
-                        if(searchSYMTABLE(part1) != null){
-                            location = searchSYMTABLE(part1).location;
-                        } else if(getRegisterNum(part1) != -1){
-                            location = getRegisterNum(part1)*10;
-                        }
-                        location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")));
-                    } else {
-                        location = getRegisterNum(opCode[2]);
-                    }
-                }
-                //check if there is a symbol in the operand field
-                if(!opCode[2].equals("")) {
-                    //check if there is an immediate, if there is convert it to an int
-                    if(opCode[2].charAt(0) == '#'){
-                        opCode[2] = opCode[2].substring(1);
-                        location = hexToDec(opCode[2]);
-                        //check if there is an indirect
-                    } else if(opCode[2].charAt(0) == '='){
-
-                    } else if(opCode[2].charAt(0) == '@'){
-
-                        //if the thing is not an immediate or indirect, check the symtable to see if that symbol exists.
-                    } else if(opCode[2].contains(",")){
-                        String part1 = opCode[2].substring(0,opCode[2].indexOf(","));
-                        if(searchSYMTABLE(part1) != null){
-                            location = searchSYMTABLE(part1).location;
-                        } else if(getRegisterNum(part1) != -1){
-                            location = getRegisterNum(part1)*10;
-                        }
-                    } else if (searchSYMTABLE(opCode[2]) != null) {
-                        location = searchSYMTABLE(opCode[2]).location;
-                        //if the operand is not an immediate, register, indirect, or valid symbol, throw an exception
-                    } else if(getRegisterNum(opCode[2])!= -1){
-                      location = getRegisterNum(opCode[2]);
-                    } else {
-                        throw new undefinedSymbolException();
-                    }
-                    //if there is no operand, set the location to 0
-                } else {
-                    location = 0;
-                }
-                
-                //conver the opcode and format of the opcode into their integer forms
-                int opVal = hexToDec(opCode[1]);
-                int format = Integer.parseInt(searchOPTABLE(opCode[1]).format());
+                //convert the opcode and format of the opcode into their integer forms
+                Operation opHex = searchOPTABLE(opCode[1]);
+                int opVal = hexToDec(opHex.opcode());
                 int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
                 //create a new object code based on the opcode, the operand value, the format, and the base
                 ObjectCode objectCode = new ObjectCode(opVal,location,programCount, base, searchOPTABLE(opCode[1]).format(),opCode[2]);
@@ -219,12 +173,53 @@ public class Assembler {
                 }
                 //TODO: Find out how this is supposed to work and do it
             } else if(opCode[1].equals("WORD")){
-                opCode[2] = opCode[2].substring(opCode[2].indexOf("'"));
-                opCode[2] += opCode[2].substring(0, opCode[2].indexOf("'"));
-                textRecord.append(opCode[2]);
+                if(opCode[2].charAt(0) == 'X'){
+
+                } else if(opCode[2].charAt(0) == 'C') {
+                    opCode[2] = opCode[2].substring(opCode[2].indexOf("'")+1,opCode[2].lastIndexOf("'"));
+                    for(int i = 0; i < opCode[2].length(); i++){
+                        int ascii = opCode[2].charAt(i);
+                        String hexVal = padWith0s(Integer.toHexString(ascii));
+                        string.append(hexVal);
+                    }
+                } else{
+                    String out;
+                    if(opCode[2].contains("+")){
+                        out = combineLabels(opCode[2],"+");
+                    } else if(opCode[2].contains("-")){
+                        out = combineLabels(opCode[2],"-");
+                    } else if(opCode[2].contains("*")){
+                        out = combineLabels(opCode[2],"*");
+                    } else {
+                        out = Integer.toHexString(Integer.parseInt(opCode[2]));
+                    }
+                    out = padWith0s(out);
+                    string.append(out);
+                }
+                textRecord.append(string);
             } else if(opCode[2].equals("BYTE")){
-                opCode[2] = opCode[2].substring(opCode[2].indexOf("'"));
-                opCode[2] += opCode[2].substring(0, opCode[2].indexOf("'"));
+                if(opCode[2].charAt(0) == 'X'){
+                    opCode[2] = opCode[2].substring(opCode[2].indexOf("'")+1,opCode[2].lastIndexOf("'"));
+                } else if(opCode[2].charAt(0) == 'C') {
+                    opCode[2] = opCode[2].substring(opCode[2].indexOf("'")+1,opCode[2].lastIndexOf("'"));
+                    string = new StringBuilder();
+                    for(int i = 0; i < opCode[2].length(); i++){
+                        int ascii = opCode[2].charAt(i);
+                        string.append(Integer.toHexString(ascii));
+                    }
+                } else{
+                    String out;
+                    if(opCode[2].contains("+")){
+                        out = combineLabels(opCode[2],"+");
+                    } else if(opCode[2].contains("-")){
+                        out = combineLabels(opCode[2],"-");
+                    } else if(opCode[2].contains("*")){
+                        out = combineLabels(opCode[2],"*");
+                    } else {
+                        out = Integer.toHexString(Integer.parseInt(opCode[2]));
+                    }
+                    string.append(out);
+                }
                 textRecord.append(opCode[2]);
             }
             opCode = pass2Parser(nextLine());
@@ -234,6 +229,34 @@ public class Assembler {
             writeListing(textRecord.toString(), start, hexToDec(opCode[3]));
         }
         writeEndRecord();
+    }
+
+    private static String combineLabels(String labels, String operator) throws undefinedSymbolException{
+        String label1 = labels.substring(0,labels.indexOf("+"));
+        String label2 = labels.substring(labels.indexOf("+")+1);
+        int lab1Address;
+        int lab2Address;
+        if(searchSYMTABLE(label1)!= null){
+            lab1Address = searchSYMTABLE(label1).location;
+        } else {
+            throw new undefinedSymbolException();
+        }
+        if(searchSYMTABLE(label2)!= null){
+            lab2Address = searchSYMTABLE(label2).location;
+        } else {
+            throw new undefinedSymbolException();
+        }
+        if(operator.equals("+")){
+            lab1Address += lab2Address;
+        } else if(operator.equals("-")){
+            lab1Address -= lab2Address;
+        } else if(operator.equals("*")){
+            lab1Address *= lab2Address;
+        } else{
+            return null;
+        }
+        return Integer.toHexString(lab1Address);
+
     }
 
     //method that reads in all the lines from a file
