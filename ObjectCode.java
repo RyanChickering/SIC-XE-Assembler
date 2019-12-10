@@ -190,7 +190,7 @@ public class ObjectCode {
             }
             String hexDisplay = Integer.toHexString(intDisplay);
             if(hexDisplay.charAt(0) == 'f'){
-                hexDisplay = fShaver(hexDisplay);
+                hexDisplay = until6Shaver(hexDisplay);
             }
             String temp = padWith4_0s(hexDisplay);
             stringDisplay = temp.substring(1).toUpperCase();
@@ -259,10 +259,8 @@ public class ObjectCode {
         return input;
     }
 
-    private static String fShaver(String string){
-        while(string.length() > 6){
-            string = string.substring(0,string.length()-1);
-        }
+    private static String until6Shaver(String string){
+        string = string.substring(string.length() - 6,string.length()-1);
         return string;
     }
 
