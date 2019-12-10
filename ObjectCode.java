@@ -164,7 +164,8 @@ public class ObjectCode {
             return padWith2_0s(opCodeString);
         }
         else if(format.equals("2")){
-            String hexDisplay = Integer.toHexString(TA);
+//            String hexDisplay = Integer.toHexString(TA);
+            String hexDisplay = TA + "";
             String temp = padWith2_0s(hexDisplay);
             stringDisplay = temp.toUpperCase();
             opCodeString = Integer.toHexString(opCode).toUpperCase();
