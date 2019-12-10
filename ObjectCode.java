@@ -184,6 +184,9 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
+            if(!n && i && !p && !b){
+                intDisplay = TA;
+            }
             String hexDisplay = Integer.toHexString(intDisplay);
             String temp = padWith4_0s(hexDisplay);
             stringDisplay = temp.substring(1).toUpperCase();
@@ -237,8 +240,9 @@ public class ObjectCode {
         if (input.length() < 2){
             string.append(input);
             string.delete(0,input.length());
+            return string.toString();
         }
-        return string.toString();
+        return input;
     }
 
     private static String padWith4_0s(String input){
@@ -246,8 +250,9 @@ public class ObjectCode {
         if (input.length() < 4){
             string.append(input);
             string.delete(0,input.length());
+            return string.toString();
         }
-        return string.toString();
+        return input;
     }
 
     private static String binToHex(String binary){
