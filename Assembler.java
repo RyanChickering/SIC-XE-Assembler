@@ -171,8 +171,9 @@ public class Assembler {
                         //check to see if there are multiple fields
                     } else if(opCode[2].contains(",")){
                         String field1 = opCode[2].substring(0,opCode[2].indexOf(","));
-                        String field2 = opCode[2].substring(opCode[2].indexOf(",")+1);
-
+                        if(searchSYMTABLE(field1)!= null){
+                            location = searchSYMTABLE(field1).location;
+                        }
                     } else if (searchSYMTABLE(opCode[2]) != null) {
                         location = searchSYMTABLE(opCode[2]).location;
                         //if the operand is not an immediate, register, indirect, or valid symbol, throw an exception
@@ -189,7 +190,6 @@ public class Assembler {
                 //conver the opcode and format of the opcode into their integer forms
                 int opVal = Integer.parseInt(searchOPTABLE(opCode[1]).opcode(),16);
                 int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
-                System.out.println(location);
                 //create a new object code based on the opcode, the operand value, the format, and the base
                 //object code, target address, pc address, base address, String format, String operand
                 ObjectCode objectCode = new ObjectCode(opVal,location,programCount, base, searchOPTABLE(opCode[1]).format(),opCode[2]);
@@ -241,7 +241,7 @@ public class Assembler {
                     string.append(out);
                 }
                 textRecord.append(string);
-            } else if(opCode[2].equals("BYTE")){
+            } else if(opCode[1].equals("BYTE")){
                 if(opCode[2].charAt(0) == 'X'){
                     opCode[2] = opCode[2].substring(opCode[2].indexOf("'")+1,opCode[2].lastIndexOf("'"));
                 } else if(opCode[2].charAt(0) == 'C') {
@@ -249,7 +249,7 @@ public class Assembler {
                     string = new StringBuilder();
                     for(int i = 0; i < opCode[2].length(); i++){
                         int ascii = opCode[2].charAt(i);
-                        string.append(Integer.toHexString(ascii));
+                        string.append(Integer.toHexString(ascii).toUpperCase());
                     }
                 } else{
                     String out;
@@ -264,7 +264,8 @@ public class Assembler {
                     }
                     string.append(out);
                 }
-                textRecord.append(opCode[2]);
+                textRecord.append("^");
+                textRecord.append(string);
             }
             opCode = pass2Parser(nextLine());
         }
@@ -373,7 +374,7 @@ public class Assembler {
     }
     //Method that removes extra spaces from the end of stuff being read in from the intermediate
     private static String spaceShaver(String string){
-        while(string.indexOf(' ') != -1){
+        while(string.indexOf(' ') != -1 && string.charAt(string.length()-1) == ' '){
             string = string.substring(0,string.length()-1);
         }
         return string;
@@ -401,7 +402,7 @@ public class Assembler {
         }
         String address = decToHex(location);
         StringBuilder string = new StringBuilder("0000");
-        if (address.length() < 4){
+        if (address.length() <= 4){
             string.append(address);
             string.delete(0,address.length());
         }
