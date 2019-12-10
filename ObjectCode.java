@@ -162,10 +162,12 @@ public class ObjectCode {
             return Integer.toHexString(opCode);
         }
         else if(format.equals("2")){
-            return Integer.toHexString(opCode) + Integer.toHexString(TA).toUpperCase();
+            String hexDisplay = Integer.toHexString(TA);
+            String temp = padWith2_0s(hexDisplay);
+            stringDisplay = temp.toUpperCase();
+            return Integer.toHexString(opCode) + stringDisplay;
         }
         else if(format.equals("3")){
-            // n = 0, i = 0
             // n = 0, i = 1
             if(!n && i){
                 opCode = opCode + 1;
@@ -179,8 +181,11 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
-            stringDisplay = Integer.toHexString(intDisplay).substring(1).toUpperCase();
-            return Integer.toHexString(opCode).toUpperCase() + binToHex(flagConverter()).toUpperCase() + stringDisplay;
+            String hexDisplay = Integer.toHexString(intDisplay);
+            String temp = padWith4_0s(hexDisplay);
+            stringDisplay = temp.substring(1).toUpperCase();
+            String binaryNumber = flagConverter();
+            return Integer.toHexString(opCode).toUpperCase() + binToHex(binaryNumber).toUpperCase() + stringDisplay;
         }
         else if(format.equals("4")){
             // n = 0, i = 0
@@ -200,7 +205,9 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
-            stringDisplay = Integer.toHexString(intDisplay).toUpperCase();
+            String hexDisplay = Integer.toHexString(intDisplay);
+            String temp = padWith4_0s(hexDisplay);
+            stringDisplay = temp.toUpperCase();
             return Integer.toHexString(opCode).toUpperCase() + binToHex(flagConverter()).toUpperCase() + "0" + stringDisplay;
         }
         return null;
@@ -208,16 +215,34 @@ public class ObjectCode {
 
     private static String flagConverter(){
         String binary = "";
-        if(x = false) { binary += "0"; }
-        else if (x = true) { binary += "1"; }
-        if(b = false) { binary += "0"; }
-        else if (b = true) { binary += "1"; }
-        if(p = false) { binary += "0"; }
-        else if (p = true) { binary += "1"; }
-        if(e = false) { binary += "0"; }
-        else if (e = true) { binary += "1"; }
+        if(!x) { binary += "0"; }
+        else if (x) { binary += "1"; }
+        if(!b) { binary += "0"; }
+        else if (b) { binary += "1"; }
+        if(!p) { binary += "0"; }
+        else if (p) { binary += "1"; }
+        if(!e) { binary += "0"; }
+        else if (e) { binary += "1"; }
 
         return binary;
+    }
+
+    private static String padWith2_0s(String input){
+        StringBuilder string = new StringBuilder("00");
+        if (input.length() < 2){
+            string.append(input);
+            string.delete(0,input.length());
+        }
+        return string.toString();
+    }
+
+    private static String padWith4_0s(String input){
+        StringBuilder string = new StringBuilder("0000");
+        if (input.length() < 4){
+            string.append(input);
+            string.delete(0,input.length());
+        }
+        return string.toString();
     }
 
     private static String binToHex(String binary){
