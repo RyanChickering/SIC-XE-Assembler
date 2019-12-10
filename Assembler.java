@@ -142,11 +142,58 @@ public class Assembler {
             //check to see if the opcode is in the optable
             StringBuilder string = new StringBuilder();
             if(searchOPTABLE(opCode[1]) != null){
-                //convert the opcode and format of the opcode into their integer forms
-                Operation opHex = searchOPTABLE(opCode[1]);
-                int opVal = hexToDec(opHex.opcode());
+                //check if the opcode if for a register to register function
+                if(searchOPTABLE(opCode[1]).format().equals("2")){
+                    //if it is, then convert the two registers into a single integer that
+                    if(opCode[2].contains(",")) {
+                        String part1 = opCode[2].substring(0,opCode[2].indexOf(","));
+                        if(searchSYMTABLE(part1) != null){
+                            location = searchSYMTABLE(part1).location;
+                        } else if(getRegisterNum(part1) != -1){
+                            location = getRegisterNum(part1)*10;
+                        }
+                        location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")));
+                    } else {
+                        location = getRegisterNum(opCode[2]);
+                    }
+                }
+                //check if there is a symbol in the operand field
+                if(!opCode[2].equals("")) {
+                    //check if there is an immediate, if there is convert it to an int
+                    if(opCode[2].charAt(0) == '#'){
+                        location = Integer.parseInt(opCode[2].substring(1));
+                        //check if there is an indirect
+                    } else if(opCode[2].charAt(0) == '='){
+
+                    } else if(opCode[2].charAt(0) == '@'){
+
+                        //if the thing is not an immediate or indirect, check the symtable to see if that symbol exists.
+                    } else if(opCode[2].contains(",")){
+                        String part1 = opCode[2].substring(0,opCode[2].indexOf(","));
+                        if(searchSYMTABLE(part1) != null){
+                            location = searchSYMTABLE(part1).location;
+                        } else if(getRegisterNum(part1) != -1){
+                            location = getRegisterNum(part1)*10;
+                        }
+                    } else if (searchSYMTABLE(opCode[2]) != null) {
+                        location = searchSYMTABLE(opCode[2]).location;
+                        //if the operand is not an immediate, register, indirect, or valid symbol, throw an exception
+                    } else if(getRegisterNum(opCode[2])!= -1){
+                      location = getRegisterNum(opCode[2]);
+                    } else {
+                        throw new undefinedSymbolException();
+                    }
+                    //if there is no operand, set the location to 0
+                } else {
+                    location = 0;
+                }
+
+                //conver the opcode and format of the opcode into their integer forms
+                int opVal = Integer.parseInt(searchOPTABLE(opCode[1]).opcode(),16);
                 int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
+                System.out.println(location);
                 //create a new object code based on the opcode, the operand value, the format, and the base
+                //object code, target address, pc address, base address, String format, String operand
                 ObjectCode objectCode = new ObjectCode(opVal,location,programCount, base, searchOPTABLE(opCode[1]).format(),opCode[2]);
                 //as long as the text record hasn't exceeded it's length
                 if(textRecord.length() < (59+opNum)){
@@ -171,7 +218,6 @@ public class Assembler {
                 if(searchSYMTABLE(opCode[3])!= null) {
                     base = (searchSYMTABLE(opCode[3]).location);
                 }
-                //TODO: Find out how this is supposed to work and do it
             } else if(opCode[1].equals("WORD")){
                 if(opCode[2].charAt(0) == 'X'){
 
