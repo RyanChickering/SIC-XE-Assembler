@@ -101,24 +101,24 @@ public class ObjectCode {
                 if(operand.charAt(operand.length()-1) == 'X'){
                     x = true;
                 }
-                else{
+                else {
                     x = false;
-                    // checks if it is a constant
-                    if(Character.isDigit(operand.charAt(0))){
-                        b = false;
+                }
+                // checks if it is a constant
+                if(Character.isDigit(operand.charAt(0))){
+                    b = false;
+                    p = false;
+                }
+                else{
+                    // check if it is base or pc relative
+                    if(TA - PC > 2048){
+                        PC = base;
+                        b = true;
                         p = false;
                     }
                     else{
-                        // check if it is base or pc relative
-                        if(TA - PC > 2048){
-                            PC = base;
-                            b = true;
-                            p = false;
-                        }
-                        else{
-                            b = false;
-                            p = true;
-                        }
+                        b = false;
+                        p = true;
                     }
                 }
             }
