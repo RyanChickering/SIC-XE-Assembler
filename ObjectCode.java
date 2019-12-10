@@ -159,12 +159,15 @@ public class ObjectCode {
         int intDisplay;
         String stringDisplay;
         String opCodeString;
+        // if format 2
         if(format.equals("1")) {
+            // converts opCode to hex and capitalizes
             opCodeString = Integer.toHexString(opCode).toUpperCase();
+            // pads opCode to 2 digit
             return padWith2_0s(opCodeString);
         }
         else if(format.equals("2")){
-//            String hexDisplay = Integer.toHexString(TA);
+            // address is just
             String hexDisplay = TA + "";
             String temp = padWith2_0s(hexDisplay);
             stringDisplay = temp.toUpperCase();
@@ -260,7 +263,7 @@ public class ObjectCode {
     }
 
     private static String until6Shaver(String string){
-        string = string.substring(string.length() - 6,string.length()-1);
+        string = string.substring(string.length() - 5,string.length());
         return string;
     }
 
