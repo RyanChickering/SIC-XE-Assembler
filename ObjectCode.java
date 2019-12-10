@@ -189,6 +189,9 @@ public class ObjectCode {
                 intDisplay = TA;
             }
             String hexDisplay = Integer.toHexString(intDisplay);
+            if(hexDisplay.charAt(0) == 'f'){
+                hexDisplay = fShaver(hexDisplay);
+            }
             String temp = padWith4_0s(hexDisplay);
             stringDisplay = temp.substring(1).toUpperCase();
             String binaryNumber = flagConverter();
@@ -254,6 +257,13 @@ public class ObjectCode {
             return string.toString();
         }
         return input;
+    }
+
+    private static String fShaver(String string){
+        while(string.length() > 6){
+            string = string.substring(0,string.length()-1);
+        }
+        return string;
     }
 
     private static String binToHex(String binary){
