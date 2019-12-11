@@ -108,7 +108,11 @@ public class Assembler {
                     //find length of operand
                     int oplength;
                     String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].lastIndexOf("'"));
-                    oplength = s.length();
+                    if(opcode[2].charAt(0) == 'C'){
+                        oplength = s.length();
+                    } else {
+                        oplength = s.length()/2;
+                    }
                     locctr += oplength;
                 } else {
                     throw new invalidOPException();
