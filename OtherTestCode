@@ -1,6 +1,7 @@
 COPY    START   0
+        LDCH    BUFFER,X
 FIRST   STL     RETADR
-        LDB     LENGTH
+        LDB     #LENGTH
         BASE    LENGTH
 CLOOP   +JSUB   RDREC
         LDA     LENGTH
@@ -18,8 +19,6 @@ EOF     BYTE    C'EOF'
 RETADR  RESW    1
 LENGTH  RESW    1
 BUFFER  RESB    4096
-BUFEND  RESB    11
-MAXLEN  RESW    11
         .
         .       Subroutine to read input
         .

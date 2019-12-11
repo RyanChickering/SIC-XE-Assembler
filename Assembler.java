@@ -89,19 +89,34 @@ public class Assembler {
                     searchOPTABLE(opcode[1].substring(1));
                     locctr += 4;
                 } else if(opcode[1].equals("WORD")){
-                    locctr += 3;
+                    //find length of operand
+                    int oplength;
+                    String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].lastIndexOf("'"));
+                    if(opcode[2].charAt(0) == 'C'){
+                        oplength = s.length();
+                    } else if(opcode[2].charAt(0) == 'X'){
+                        oplength = s.length()/2;
+                    } else {
+                        oplength = s.length();
+                    }
+                    locctr += oplength*3;
                 } else if(opcode[1].equals("BASE")) {
                     locctr += 0;
                 } else if(opcode[1].equals("RESW")){
                     locctr += 3*Integer.parseInt(opcode[2]);
                 } else if(opcode[1].equals("RESB")){
                     locctr += Integer.parseInt(opcode[2]);
-                    //TODO: Figure out how this works (also how word works)
                 } else if(opcode[1].equals("BYTE")){
                     //find length of operand
                     int oplength;
                     String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].lastIndexOf("'"));
-                    oplength = s.length();
+                    if(opcode[2].charAt(0) == 'C'){
+                        oplength = s.length();
+                    } else if(opcode[2].charAt(0) == 'X'){
+                        oplength = s.length()/2;
+                    } else {
+                        oplength = s.length();
+                    }
                     locctr += oplength;
                 } else {
                     throw new invalidOPException();
@@ -170,6 +185,16 @@ public class Assembler {
                 if(extended){
                     format = "4";
                     if(opCode[2].charAt(0) != '#') {
+                        while(opCode[2].contains("+") || opCode[2].contains("-")){
+                            if(opCode[2].contains("+")){
+                                modificationRecord.append("M^");
+                                modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
+                                modificationRecord.append("^");
+                                modificationRecord.append("06");
+                                modificationRecord.append("56");
+                                modificationRecord.append("\n");
+                            }
+                        }
                         modificationRecord.append("M^");
                         modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
                         modificationRecord.append("^");
@@ -215,6 +240,8 @@ public class Assembler {
             } else if(opCode[1].equals("BYTE")){
                 if(opCode[2].charAt(0) == 'X'){
                     opCode[2] = opCode[2].substring(opCode[2].indexOf("'")+1,opCode[2].lastIndexOf("'"));
+                    string = new StringBuilder();
+                    string.append(opCode[2]);
                 } else if(opCode[2].charAt(0) == 'C') {
                     opCode[2] = opCode[2].substring(opCode[2].indexOf("'")+1,opCode[2].lastIndexOf("'"));
                     string = new StringBuilder();
@@ -288,7 +315,6 @@ public class Assembler {
         if(!opCode[2].equals("")) {
             //check if there is an immediate, if there is convert it to an int
             if(opCode[2].charAt(0) == '#'){
-                //TODO: Deal with immediate labels
                 boolean isNumber = false;
 
                 String lab = opCode[2].substring(1);
@@ -300,14 +326,12 @@ public class Assembler {
                 }
                 if(isNumber == false){
                     location = searchSYMTABLE(lab).location;
-                    System.out.println(location);
                 }
                 //location = Integer.parseInt(opCode[2].substring(1));
                 //check if there is an indirect
             } else if(opCode[2].charAt(0) == '='){
                 //TODO: Deal with literals
             } else if(opCode[2].charAt(0) == '@'){
-                //TODO: Figure out indirect addressing
                 location = searchSYMTABLE(opCode[2].substring(1)).location;
 
                 //61 and 294
