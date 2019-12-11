@@ -116,7 +116,9 @@ public class ObjectCode {
                         }
                     }
                 }
-            } else if (format.equals("4")) {
+             }
+        }
+        else if (format.equals("4")) {
                 e = true;
                 b = false;
                 p = false;
@@ -139,13 +141,14 @@ public class ObjectCode {
                     // checks if c,X or m,X
                     if (operand.charAt(operand.length() - 1) == 'X') {
                         x = true;
-                    } else {
+                    }
+                    else {
                         x = false;
                     }
                 }
             }
         }
-    }
+
 
     public static String printObjectCode(){
         setFlags();
