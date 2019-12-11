@@ -212,6 +212,9 @@ public class ObjectCode {
                 opCode = opCode + 3;
             }
             intDisplay = TA - PC;
+            if(!n && i && !p && !b){
+                intDisplay = TA;
+            }
             String hexDisplay = Integer.toHexString(intDisplay);
             String temp = padWith4_0s(hexDisplay);
             stringDisplay = temp.toUpperCase();
