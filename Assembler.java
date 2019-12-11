@@ -125,7 +125,7 @@ public class Assembler {
                 opcode = opcodeParser(nextLine());
             }
         }
-        
+
         writeIntermediate(locctr, opcode);
         progLength = locctr - startLoc;
     }
