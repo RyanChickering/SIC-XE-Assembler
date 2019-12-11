@@ -16,6 +16,11 @@ public class Assembler {
         lineCnt = 0;
         try {
             pass1(args[0]);
+            pass2();
+            //Deletes the intermediate file
+            File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
+            //intermediateFile.delete();
+            System.out.println("Assembled with no errors");
         }
         catch(invalidOPException e){
             System.out.println("The opcode is invalid");
@@ -25,10 +30,14 @@ public class Assembler {
             System.out.println("Duplicate labels are found");
             System.exit(1);
         }
-        pass2();
-        //Deletes the intermediate file
-        File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
-        //intermediateFile.delete();
+        /*
+        catch(NullPointerException e) {
+            System.out.println("Oops! Something went wrong! Check that your code is syntactically correct!");
+            System.exit(1);
+        }
+        catch (StringIndexOutOfBoundsException e){
+            System.out.println("Oops, something went wrong while parsing");
+        }*/
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
@@ -49,7 +58,7 @@ public class Assembler {
         while (!opcode[1].equals("END")){
             //checks if the line is a comment
             if(opcode[0] != null && opcode[0].equals("comment")){
-
+                opcode = opcodeParser(nextLine());
             } else {
                 //checks the labels
                 if(opcode[0] != null && searchSYMTABLE(opcode[0]) != null){
@@ -138,12 +147,14 @@ public class Assembler {
         StringBuilder textRecord = new StringBuilder();
         int opNum = 0;
         int base = 0;
-        int location = 0;
-        int start = 0;
+        int location;
+        int start = -1;
+        int end = 0;
         while(!(opCode[1].equals("END"))){
             //Checks if comment
             //check to see if the opcode is in the optable
             StringBuilder string = new StringBuilder();
+            ObjectCode objectCode;
             boolean extended = false;
             if(opCode[1].charAt(0) == '+'){
                 extended = true;
@@ -158,34 +169,19 @@ public class Assembler {
                 String format;
                 if(extended){
                     format = "4";
-                    modificationRecord.append("M^");
-                    modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3],16) + 1))));
-                    modificationRecord.append("^");
-                    modificationRecord.append("\n");
+                    if(opCode[2].charAt(0) != '#') {
+                        modificationRecord.append("M^");
+                        modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
+                        modificationRecord.append("^");
+                        modificationRecord.append("\n");
+                    }
                 } else {
                     format = searchOPTABLE(opCode[1]).format();
                 }
                 //create a new object code based on the opcode, the operand value, the format, and the base
                 //object code, target address, pc address, base address, String format, String operand
-                ObjectCode objectCode = new ObjectCode(opVal,location,programCount, base, format,opCode[2]);
-                //as long as the text record hasn't exceeded it's length
-                if(textRecord.length() < (59+opNum)){
-                    if(textRecord.length() == 0){
-                        start = hexToDec(opCode[3]);
-                    }
-                    //add the object code to the text record
-                    textRecord.append("^");
-                    textRecord.append(objectCode.printObjectCode());
-                    //keep track of how many object codes have been added to the current record because the ^ creates a new character
-                    opNum++;
-                } else {
-                    //if the text record will get too big, print out the line and start a new one
-                    writeListing(textRecord.toString(), start, hexToDec(opCode[3]));
-                    textRecord = new StringBuilder();
-                    textRecord.append(objectCode.printObjectCode());
-                    start = 0;
-                    opNum = 0;
-                }
+                objectCode = new ObjectCode(opVal,location,programCount, base, format,opCode[2]);
+                string.append(objectCode.printObjectCode());
                 //check the base, if you have the base, update the base.
             } else if(opCode[1].equals("BASE")){
                 if(searchSYMTABLE(opCode[3])!= null) {
@@ -239,14 +235,35 @@ public class Assembler {
                     }
                     string.append(out);
                 }
-                textRecord.append("^");
-                textRecord.append(string);
+            }
+            //as long as the text record hasn't exceeded it's length
+            if(!string.toString().equals("")) {
+                if (textRecord.length() + string.length() < (59 + opNum)) {
+                    if (start == -1) {
+                        start = hexToDec(opCode[3]);
+                    }
+                    //add the object code to the text record
+
+                    textRecord.append("^");
+                    textRecord.append(string);
+                    end = hexToDec(opCode[3]);
+                    //keep track of how many object codes have been added to the current record because the ^ creates a new character
+                    opNum++;
+                } else {
+                    //if the text record will get too big, print out the line and start a new one
+                    end = hexToDec(opCode[3]);
+                    writeListing(textRecord.toString(), start, end);
+                    textRecord = new StringBuilder();
+                    textRecord.append("^");
+                    textRecord.append(string);
+                    start = hexToDec(opCode[3]);
+                    opNum = 0;
+                }
             }
             opCode = pass2Parser(nextLine());
         }
         if(textRecord.length() > 0) {
-            System.out.println(textRecord);
-            writeListing(textRecord.toString(), start, hexToDec(opCode[3]));
+            writeListing(textRecord.toString(), start, end);
         }
         writeEndRecord(modificationRecord.toString());
     }
@@ -262,7 +279,7 @@ public class Assembler {
                 } else if(getRegisterNum(part1) != -1){
                     location = getRegisterNum(part1)*10;
                 }
-                location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")));
+                location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")+1));
             } else {
                 location = getRegisterNum(opCode[2]);
             }
@@ -278,6 +295,9 @@ public class Assembler {
                 //TODO: Deal with literals
             } else if(opCode[2].charAt(0) == '@'){
                 //TODO: Figure out indirect addressing
+                location = searchSYMTABLE(opCode[2].substring(1)).location;
+
+                //61 and 294
                 //if the thing is not an immediate or indirect, check the symtable to see if that symbol exists.
                 //check to see if there are multiple fields
             } else if(opCode[2].contains(",")){
@@ -349,6 +369,16 @@ public class Assembler {
     //label,opcode,value.
     private static String[] opcodeParser(String line){
         String[] out = new String[3];
+        //deletes everything after a comment line
+        if(line.contains(".")){
+            line = line.substring(0,line.indexOf("."));
+            if(spaceIterator(line).length() == 0){
+                out[0] = "comment";
+                out[1] = "comment";
+                out[2] = "comment";
+                return out;
+            }
+        }
         out[0] = line; out[1] = line; out[2] = line;
         //if the line starts with a space(not a label) skip spaces until you hit something
         if(out[0].indexOf(' ') == 0){
@@ -385,7 +415,6 @@ public class Assembler {
         }
         return out;
     }
-
     //Parses opcodes out of the intermediate file.
     //label,opcode,operand,address
     private static String[] pass2Parser(String line){
@@ -406,12 +435,11 @@ public class Assembler {
     //Method to skip spaces and reach the start of actual lines
     private static String spaceIterator(String string){
         int i = 0;
-        while(string.substring(i,i+1).equals(" ")){
+        while(i < string.length() && string.substring(i,i+1).equals(" ")){
             i++;
         }
         return string.substring(i);
     }
-
     //method that writes the intermediate file
     private static void writeIntermediate(int location, String[] opcode) throws IOException{
         String filepath = System.getProperty("user.dir") + "/pass1Intermediate";

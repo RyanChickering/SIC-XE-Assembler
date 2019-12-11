@@ -45,110 +45,103 @@ public class ObjectCode {
     }
 
     public static void setFlags(){
-        if(format.equals("3")){
+        if(format.equals("3")) {
             e = false;
             // checks if it is indirect
-            if(operand.charAt(0) == '@') {
-                n = true;
-                i = false;
-                x = false;
-                // checks if it is a constant
-                if (Character.isDigit(operand.charAt(1))) {
-                    b = false;
-                    p = false;
-                }
-                else {
-                    // check if it is base or pc relative
-                    if(TA - PC > 2048){
-                        PC = base;
-                        b = true;
-                        p = false;
-                    }
-                    else{
+            if (operand.length() > 0) {
+                if (operand.charAt(0) == '@') {
+                    n = true;
+                    i = false;
+                    x = false;
+                    // checks if it is a constant
+                    if (Character.isDigit(operand.charAt(1))) {
                         b = false;
-                        p = true;
-                    }
-                }
-            }
-            // checks if immediate
-            else if(operand.charAt(0) == '#'){
-                n = false;
-                i = true;
-                x = false;
-                // checks if it is a constant
-                if(Character.isDigit(operand.charAt(1))){
-                    b = false;
-                    p = false;
-                }
-                else {
-                    // check if it is base or pc relative
-                    if(TA - PC > 2048){
-                        PC = base;
-                        b = true;
                         p = false;
+                    } else {
+                        // check if it is base or pc relative
+                        if (TA - PC > 2048) {
+                            PC = base;
+                            b = true;
+                            p = false;
+                        } else {
+                            b = false;
+                            p = true;
+                        }
                     }
-                    else{
+                }
+                // checks if immediate
+                else if (operand.charAt(0) == '#') {
+                    n = false;
+                    i = true;
+                    x = false;
+                    // checks if it is a constant
+                    if (Character.isDigit(operand.charAt(1))) {
                         b = false;
-                        p = true;
+                        p = false;
+                    } else {
+                        // check if it is base or pc relative
+                        if (TA - PC > 2048) {
+                            PC = base;
+                            b = true;
+                            p = false;
+                        } else {
+                            b = false;
+                            p = true;
+                        }
                     }
                 }
-            }
-            // simple otherwise
-            else{
-                n = true;
-                i = true;
-                // checks if c,X or m,X
-                if(operand.charAt(operand.length()-1) == 'X'){
-                    x = true;
-                }
+                // simple otherwise
                 else {
+                    n = true;
+                    i = true;
+                    // checks if c,X or m,X
+                    if (operand.charAt(operand.length() - 1) == 'X') {
+                        x = true;
+                    } else {
+                        x = false;
+                    }
+                    // checks if it is a constant
+                    if (Character.isDigit(operand.charAt(0))) {
+                        b = false;
+                        p = false;
+                    } else {
+                        // check if it is base or pc relative
+                        if (TA - PC > 2048) {
+                            PC = base;
+                            b = true;
+                            p = false;
+                        } else {
+                            b = false;
+                            p = true;
+                        }
+                    }
+                }
+            } else if (format.equals("4")) {
+                e = true;
+                b = false;
+                p = false;
+                // checks if it is indirect
+                if (operand.charAt(0) == '@') {
+                    n = true;
+                    i = false;
                     x = false;
                 }
-                // checks if it is a constant
-                if(Character.isDigit(operand.charAt(0))){
-                    b = false;
-                    p = false;
-                }
-                else{
-                    // check if it is base or pc relative
-                    if(TA - PC > 2048){
-                        PC = base;
-                        b = true;
-                        p = false;
-                    }
-                    else{
-                        b = false;
-                        p = true;
-                    }
-                }
-            }
-        }
-        else if(format.equals("4")){
-            e = true;
-            b = false;
-            p = false;
-            // checks if it is indirect
-            if(operand.charAt(0) == '@') {
-                n = true;
-                i = false;
-                x = false;
-            }
-            // checks if it is immediate
-            else if(operand.charAt(0) == '#'){
-                n = false;
-                i = true;
-                x = false;
-            }
-            // simple otherwise
-            else{
-                n = true;
-                i = true;
-                // checks if c,X or m,X
-                if(operand.charAt(operand.length()-1) == 'X'){
-                    x = true;
-                }
-                else{
+                // checks if it is immediate
+                else if (operand.charAt(0) == '#') {
+                    n = false;
+                    i = true;
                     x = false;
+                }
+                // simple otherwise
+                else {
+                    n = true;
+                    i = true;
+                    // checks if c,X or m,X
+                    if (operand.charAt(operand.length() - 1) == 'X') {
+                        x = true;
+                    } else {
+                        x = false;
+                    }
                 }
             }
         }
