@@ -326,6 +326,11 @@ public class Assembler {
                 }
                 if(isNumber == false){
                     location = searchSYMTABLE(lab).location;
+                    System.out.println(location);
+                }
+                else if(isNumber){
+                    location = Integer.parseInt(lab);
+                    System.out.println(location);
                 }
                 //location = Integer.parseInt(opCode[2].substring(1));
                 //check if there is an indirect
