@@ -134,17 +134,6 @@ public class Assembler {
                     value = opcode[2].substring(index+1, opcode[2].lastIndexOf('\''));
                     length = value.length();
                     i = hexToDec(value);
-                    if (!LITTAB.search(i)){
-                        LITTAB.add(i,name,length);
-                    }
-                    else{
-                        if(LITTAB.getName(i) != name) {
-                            values.add(i);
-                            LITTAB.add(i,name,length);
-
-                        }
-                    }
-                    System.out.println(LITTAB.getLittab());
                 }
                 opcode = opcodeParser(nextLine());
             }
