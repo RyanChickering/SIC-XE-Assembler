@@ -169,20 +169,24 @@ public class Assembler {
                 int opVal = Integer.parseInt(searchOPTABLE(opCode[1]).opcode(),16);
                 int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
                 String format;
-                if(extended){
-                    format = "4";
+                if(extended || (opCode[2].contains("+") || opCode[2].contains("-"))){
+                    if(extended){
+                        format = "4";
+                    } else {
+                        format = searchOPTABLE(opCode[1]).format();
+                    }
                     if(opCode[2].charAt(0) != '#') {
                         if(opCode[2].contains("+") || opCode[2].contains("-")) {
-                            while (opCode[2].contains("+") || opCode[2].contains("-")) {
-                                if (opCode[2].contains("+")) {
-                                    modificationRecord.append("M^");
-                                    modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
-                                    modificationRecord.append("^");
-                                    modificationRecord.append("06");
-                                    modificationRecord.append("^");
-                                    modificationRecord.append("");
-                                    modificationRecord.append("\n");
-                                }
+                            String[] mods = modRecParser(opCode[2]);
+                            modtotal += mods.length*3;
+                            for(int i = 0; i < mods.length; i++){
+                                modificationRecord.append("M^");
+                                modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
+                                modificationRecord.append("^");
+                                modificationRecord.append("06");
+                                modificationRecord.append("^");
+                                modificationRecord.append(mods[i]);
+                                modificationRecord.append("\n");
                             }
                         } else {
                             modificationRecord.append("M^");
@@ -327,8 +331,19 @@ public class Assembler {
                 }
                 //location = Integer.parseInt(opCode[2].substring(1));
                 //check if there is an indirect
-            } else if(opCode[2].charAt(0) == '='){
-                //TODO: Deal with literals
+            } else if(opCode[2].contains("+") || opCode[2].contains("-")){
+                String[] labels = modRecParser(opCode[2]);
+                for(int i = 0; i < labels.length; i++){
+                    if(labels[i].charAt(0) == '+'){
+                        if(searchSYMTABLE(labels[i].substring(1))!= null){
+                            location += searchSYMTABLE(labels[i].substring(1)).location;
+                        }
+                    } else {
+                        if(searchSYMTABLE(labels[i].substring(1))!= null){
+                            location -= searchSYMTABLE(labels[i].substring(1)).location;
+                        }
+                    }
+                }
             } else if(opCode[2].charAt(0) == '@'){
                 location = searchSYMTABLE(opCode[2].substring(1)).location;
 
@@ -574,6 +589,32 @@ public class Assembler {
             }
         }
         return null;
+    }
+    private static String[] modRecParser(String operand) {
+        int operators = 0;
+        for (int i = 0; i < operand.length(); i++) {
+            if (operand.charAt(i) == '+' || operand.charAt(i) == '-') {
+                operators++;
+            }
+        }
+        String[] out = new String[operators + 1];
+        int front = 0;
+        int back = 0;
+        int count = 0;
+        while ((count < operators)) {
+            if ((operand.charAt(back) == '+' || operand.charAt(back) == '-')) {
+                if (count == 0) {
+                    out[count] = "+" + operand.substring(front, back);
+                } else {
+                    out[count] = operand.substring(front, back);
+                }
+                front = back;
+                count++;
+            }
+            back++;
+        }
+        out[count] = operand.substring(front);
+        return out;
     }
     //method to convert a hex number represented by a string to it's integer value
     private static int hexToDec(String hex){
