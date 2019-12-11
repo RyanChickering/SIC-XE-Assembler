@@ -30,13 +30,14 @@ public class Assembler {
             System.out.println("Duplicate labels are found");
             System.exit(1);
         }
+        /*
         catch(NullPointerException e) {
             System.out.println("Oops! Something went wrong! Check that your code is syntactically correct!");
             System.exit(1);
         }
         catch (StringIndexOutOfBoundsException e){
             System.out.println("Oops, something went wrong while parsing");
-        }
+        }*/
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
@@ -88,7 +89,17 @@ public class Assembler {
                     searchOPTABLE(opcode[1].substring(1));
                     locctr += 4;
                 } else if(opcode[1].equals("WORD")){
-                    locctr += 3;
+                    //find length of operand
+                    int oplength;
+                    String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].lastIndexOf("'"));
+                    if(opcode[2].charAt(0) == 'C'){
+                        oplength = s.length();
+                    } else if(opcode[2].charAt(0) == 'X'){
+                        oplength = s.length()/2;
+                    } else {
+                        oplength = s.length();
+                    }
+                    locctr += oplength*3;
                 } else if(opcode[1].equals("BASE")) {
                     locctr += 0;
                 } else if(opcode[1].equals("RESW")){
@@ -99,24 +110,23 @@ public class Assembler {
                     //find length of operand
                     int oplength;
                     String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].lastIndexOf("'"));
-                    oplength = s.length();
+                    if(opcode[2].charAt(0) == 'C'){
+                        oplength = s.length();
+                    } else if(opcode[2].charAt(0) == 'X'){
+                        oplength = s.length()/2;
+                    } else {
+                        oplength = s.length();
+                    }
                     locctr += oplength;
                 } else {
                     throw new invalidOPException();
                     //error not a real thing
                 }
-                int index;
-                String name;
-                String value;
-                int length;
-                if (opcode[2].contains("=")){
-
-                }
 
                 opcode = opcodeParser(nextLine());
             }
         }
-        
+
         writeIntermediate(locctr, opcode);
         progLength = locctr - startLoc;
     }
@@ -125,10 +135,8 @@ public class Assembler {
         lineCnt = 0;
         getLines(System.getProperty("user.dir") + "/pass1Intermediate");
         createListing();
-        int modtotal = 1;
         lineCnt = 0;
         String[] opCode = pass2Parser((nextLine()));
-        String progName = opCode[0];
         if(opCode[1].equals("START")){
             locctr = Integer.parseInt(opCode[2]);
             opCode = pass2Parser(nextLine());
@@ -163,28 +171,20 @@ public class Assembler {
                 if(extended){
                     format = "4";
                     if(opCode[2].charAt(0) != '#') {
-                        if(opCode[2].contains("+") || opCode[2].contains("-")) {
-                            while (opCode[2].contains("+") || opCode[2].contains("-")) {
-                                if (opCode[2].contains("+")) {
-                                    modificationRecord.append("M^");
-                                    modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
-                                    modificationRecord.append("^");
-                                    modificationRecord.append("06");
-                                    modificationRecord.append("^");
-                                    modificationRecord.append("");
-                                    modificationRecord.append("\n");
-                                }
+                        while(opCode[2].contains("+") || opCode[2].contains("-")){
+                            if(opCode[2].contains("+")){
+                                modificationRecord.append("M^");
+                                modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
+                                modificationRecord.append("^");
+                                modificationRecord.append("06");
+                                modificationRecord.append("56");
+                                modificationRecord.append("\n");
                             }
-                        } else {
-                            modificationRecord.append("M^");
-                            modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
-                            modificationRecord.append("^");
-                            modificationRecord.append("05");
-                            modificationRecord.append("^");
-                            modificationRecord.append("+");
-                            modificationRecord.append(progName);
-                            modificationRecord.append("\n");
                         }
+                        modificationRecord.append("M^");
+                        modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
+                        modificationRecord.append("^");
+                        modificationRecord.append("\n");
                     }
                 } else {
                     format = searchOPTABLE(opCode[1]).format();
@@ -195,7 +195,7 @@ public class Assembler {
                 string.append(objectCode.printObjectCode());
                 //check the base, if you have the base, update the base.
             } else if(opCode[1].equals("BASE")){
-                if(searchSYMTABLE(opCode[2])!= null) {
+                if(searchSYMTABLE(opCode[3])!= null) {
                     base = (searchSYMTABLE(opCode[2]).location);
                 }
             } else if(opCode[1].equals("WORD")){
@@ -259,13 +259,13 @@ public class Assembler {
 
                     textRecord.append("^");
                     textRecord.append(string);
-                    end += string.length()/2;
+                    end = hexToDec(opCode[3]);
                     //keep track of how many object codes have been added to the current record because the ^ creates a new character
                     opNum++;
                 } else {
                     //if the text record will get too big, print out the line and start a new one
+                    end = hexToDec(opCode[3]);
                     writeListing(textRecord.toString(), start, end);
-                    end = string.length()/2;
                     textRecord = new StringBuilder();
                     textRecord.append("^");
                     textRecord.append(string);
@@ -291,8 +291,8 @@ public class Assembler {
                     location = searchSYMTABLE(part1).location;
                 } else if(getRegisterNum(part1) != -1){
                     location = getRegisterNum(part1)*10;
-                    location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")+1));
                 }
+                location += getRegisterNum(opCode[2].substring(opCode[2].indexOf(",")+1));
             } else {
                 location = getRegisterNum(opCode[2]);
             }
@@ -312,9 +312,11 @@ public class Assembler {
                 }
                 if(isNumber == false){
                     location = searchSYMTABLE(lab).location;
+                    System.out.println(location);
                 }
                 else if(isNumber){
                     location = Integer.parseInt(lab);
+                    System.out.println(location);
                 }
                 //location = Integer.parseInt(opCode[2].substring(1));
                 //check if there is an indirect
@@ -493,7 +495,7 @@ public class Assembler {
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         StringBuilder string = new StringBuilder();
         String[] opcode = pass2Parser(nextLine());
-        String out = String.format("%s%-6s%s%s%s%s","H^", (opcode[0]),"^",padWith0s(opcode[3]),"^",padWith0s(decToHex(progLength)));
+        String out = String.format("%s%6s%s%s%s%s","H^", (opcode[0]),"^",padWith0s(opcode[3]),"^",padWith0s(decToHex(progLength)));
         printer.println(out);
         printer.close();
     }
@@ -517,7 +519,7 @@ public class Assembler {
         string.append("T^");
         string.append(padWith0s(decToHex(start)));
         string.append("^");
-        String hexLength = decToHex(end);
+        String hexLength = decToHex(end-start);
         string.append(hexLength);
         string.append(opcodes);
         string.append("\n");
