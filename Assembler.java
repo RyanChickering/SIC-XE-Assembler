@@ -15,7 +15,12 @@ public class Assembler {
         //Should provide cmd line argument to pass an input file to the assembler
         lineCnt = 0;
         try {
-            pass1(args[0]);
+            if (args[0].length() == 0) {
+               throw new NoArgsException();
+            }
+            else{
+                pass1(args[0]);
+            }
             pass2();
             //Deletes the intermediate file
             File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
@@ -36,6 +41,10 @@ public class Assembler {
         }
         catch (StringIndexOutOfBoundsException e){
             System.out.println("Oops, something went wrong while parsing");
+        }
+        catch(NoArgsException e){
+            System.out.println("Oops! no argument was passed");
+            System.exit(1);
         }
     }
 
