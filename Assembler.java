@@ -19,7 +19,7 @@ public class Assembler {
             pass2();
             //Deletes the intermediate file
             File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
-            //intermediateFile.delete();
+            intermediateFile.delete();
             System.out.println("Assembled with no errors");
         }
         catch(invalidOPException e){
@@ -517,6 +517,9 @@ public class Assembler {
         string.append("T^");
         string.append(padWith0s(decToHex(start)));
         string.append("^");
+        if(decToHex(end).length() < 2){
+            string.append("0");
+        }
         String hexLength = decToHex(end);
         string.append(hexLength);
         string.append(opcodes);
