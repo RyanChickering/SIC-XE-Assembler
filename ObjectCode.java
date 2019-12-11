@@ -47,6 +47,15 @@ public class ObjectCode {
     public static void setFlags(){
         if(format.equals("3")) {
             e = false;
+            // checks if no operand
+            if (operand.length() == 0){
+                n = true;
+                i = true;
+                x = false;
+                b = false;
+                p = false;
+                e = false;
+            }
             // checks if it is indirect
             if (operand.length() > 0) {
                 if (operand.charAt(0) == '@') {
@@ -57,13 +66,15 @@ public class ObjectCode {
                     if (Character.isDigit(operand.charAt(1))) {
                         b = false;
                         p = false;
-                    } else {
+                    }
+                    else {
                         // check if it is base or pc relative
                         if (TA - PC > 2048) {
                             PC = base;
                             b = true;
                             p = false;
-                        } else {
+                        }
+                        else {
                             b = false;
                             p = true;
                         }
@@ -78,13 +89,15 @@ public class ObjectCode {
                     if (Character.isDigit(operand.charAt(1))) {
                         b = false;
                         p = false;
-                    } else {
+                    }
+                    else {
                         // check if it is base or pc relative
                         if (TA - PC > 2048) {
                             PC = base;
                             b = true;
                             p = false;
-                        } else {
+                        }
+                        else {
                             b = false;
                             p = true;
                         }
@@ -97,20 +110,23 @@ public class ObjectCode {
                     // checks if c,X or m,X
                     if (operand.charAt(operand.length() - 1) == 'X') {
                         x = true;
-                    } else {
+                    }
+                    else {
                         x = false;
                     }
                     // checks if it is a constant
                     if (Character.isDigit(operand.charAt(0))) {
                         b = false;
                         p = false;
-                    } else {
+                    }
+                    else {
                         // check if it is base or pc relative
                         if (TA - PC > 2048) {
                             PC = base;
                             b = true;
                             p = false;
-                        } else {
+                        }
+                        else {
                             b = false;
                             p = true;
                         }
@@ -185,6 +201,9 @@ public class ObjectCode {
             }
             intDisplay = TA - PC;
             if(!n && i && !p && !b){
+                intDisplay = TA;
+            }
+            if(operand.length() == 0){
                 intDisplay = TA;
             }
             String hexDisplay = Integer.toHexString(intDisplay);
