@@ -289,7 +289,20 @@ public class Assembler {
             //check if there is an immediate, if there is convert it to an int
             if(opCode[2].charAt(0) == '#'){
                 //TODO: Deal with immediate labels
-                location = Integer.parseInt(opCode[2].substring(1));
+                boolean isNumber = false;
+
+                String lab = opCode[2].substring(1);
+                for(char c : lab.toCharArray())
+                {
+                    if(Character.isDigit(c)){
+                        isNumber = true;
+                    }
+                }
+                if(isNumber == false){
+                    location = searchSYMTABLE(lab).location;
+                    System.out.println(location);
+                }
+                //location = Integer.parseInt(opCode[2].substring(1));
                 //check if there is an indirect
             } else if(opCode[2].charAt(0) == '='){
                 //TODO: Deal with literals
