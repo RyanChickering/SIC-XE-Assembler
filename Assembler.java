@@ -126,11 +126,21 @@ public class Assembler {
                 String name;
                 String value;
                 int length;
+                if (opcode[2].contains("=")){
+                    if (!LITTAB.search(opcode[2])){
+                        index = opcode[2].indexOf('\'');
+                        name = opcode[2].substring(1,index);
+                        value = opcode[2].substring(index, opcode[2].lastIndexOf('\''));
+                        length = value.length();
+                        int i = Integer.parseInt(value);
+                        LITTAB.add(name,i,length);
+                    }
+                }
 
                 opcode = opcodeParser(nextLine());
             }
         }
-
+        
         writeIntermediate(locctr, opcode);
         progLength = locctr - startLoc;
     }
@@ -139,6 +149,7 @@ public class Assembler {
         lineCnt = 0;
         getLines(System.getProperty("user.dir") + "/pass1Intermediate");
         createListing();
+        int modtotal = 0;
         lineCnt = 0;
         String[] opCode = pass2Parser((nextLine()));
         if(opCode[1].equals("START")){
@@ -175,20 +186,24 @@ public class Assembler {
                 if(extended){
                     format = "4";
                     if(opCode[2].charAt(0) != '#') {
-                        while(opCode[2].contains("+") || opCode[2].contains("-")){
-                            if(opCode[2].contains("+")){
-                                modificationRecord.append("M^");
-                                modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
-                                modificationRecord.append("^");
-                                modificationRecord.append("06");
-                                modificationRecord.append("56");
-                                modificationRecord.append("\n");
+                        if(opCode[2].contains("+") || opCode[2].contains("-")) {
+                            while (opCode[2].contains("+") || opCode[2].contains("-")) {
+                                if (opCode[2].contains("+")) {
+                                    modificationRecord.append("M^");
+                                    modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
+                                    modificationRecord.append("^");
+                                    modificationRecord.append("06");
+                                    modificationRecord.append("^");
+                                    modificationRecord.append("\n");
+                                    modtotal += 6;
+                                }
                             }
+                        } else {
+                            modificationRecord.append("M^");
+                            modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
+                            modificationRecord.append("^");
+                            modificationRecord.append("\n");
                         }
-                        modificationRecord.append("M^");
-                        modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
-                        modificationRecord.append("^");
-                        modificationRecord.append("\n");
                     }
                 } else {
                     format = searchOPTABLE(opCode[1]).format();
@@ -316,11 +331,9 @@ public class Assembler {
                 }
                 if(isNumber == false){
                     location = searchSYMTABLE(lab).location;
-                    System.out.println(location);
                 }
                 else if(isNumber){
                     location = Integer.parseInt(lab);
-                    System.out.println(location);
                 }
                 //location = Integer.parseInt(opCode[2].substring(1));
                 //check if there is an indirect
@@ -499,7 +512,7 @@ public class Assembler {
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         StringBuilder string = new StringBuilder();
         String[] opcode = pass2Parser(nextLine());
-        String out = String.format("%s%6s%s%s%s%s","H^", (opcode[0]),"^",padWith0s(opcode[3]),"^",padWith0s(decToHex(progLength)));
+        String out = String.format("%s%-6s%s%s%s%s","H^", (opcode[0]),"^",padWith0s(opcode[3]),"^",padWith0s(decToHex(progLength)));
         printer.println(out);
         printer.close();
     }
