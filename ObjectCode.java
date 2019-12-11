@@ -233,7 +233,7 @@ public class ObjectCode {
             else {
                 opCode = opCode + 3;
             }
-            intDisplay = TA - PC;
+            intDisplay = TA;
             if(!n && i && !p && !b){
                 intDisplay = TA;
             }

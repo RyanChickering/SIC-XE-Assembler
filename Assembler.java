@@ -10,12 +10,6 @@ public class Assembler {
     private static List<String> lines;
     private static int lineCnt;
     private static int progLength;
-    private static int index;
-    private static String name;
-    private static String value;
-    private static int length;
-    private static int i;
-    private static ArrayList<Integer> values = new ArrayList<>();
 
     public static void main(String[]args) throws IOException, invalidOPException, undefinedSymbolException{
         //Should provide cmd line argument to pass an input file to the assembler
@@ -128,24 +122,11 @@ public class Assembler {
                     throw new invalidOPException();
                     //error not a real thing
                 }
-                if (opcode[2].contains("=")){
-                    index = opcode[2].indexOf('\'');
-                    name = opcode[2];
-                    value = opcode[2].substring(index+1, opcode[2].lastIndexOf('\''));
-                    length = value.length();
-                    i = hexToDec(value);
-                    if (!LITTAB.search(i)){
-                        LITTAB.add(i,name,length);
-                    }
-                    else{
-                        if(LITTAB.getName(i) != name) {
-                            values.add(i);
-                            LITTAB.add(i,name,length);
+                int index;
+                String name;
+                String value;
+                int length;
 
-                        }
-                    }
-                    System.out.println(LITTAB.getLittab());
-                }
                 opcode = opcodeParser(nextLine());
             }
         }
@@ -194,6 +175,16 @@ public class Assembler {
                 if(extended){
                     format = "4";
                     if(opCode[2].charAt(0) != '#') {
+                        while(opCode[2].contains("+") || opCode[2].contains("-")){
+                            if(opCode[2].contains("+")){
+                                modificationRecord.append("M^");
+                                modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
+                                modificationRecord.append("^");
+                                modificationRecord.append("06");
+                                modificationRecord.append("56");
+                                modificationRecord.append("\n");
+                            }
+                        }
                         modificationRecord.append("M^");
                         modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + 1))));
                         modificationRecord.append("^");
@@ -314,13 +305,28 @@ public class Assembler {
         if(!opCode[2].equals("")) {
             //check if there is an immediate, if there is convert it to an int
             if(opCode[2].charAt(0) == '#'){
-                //TODO: Deal with immediate labels
-                location = Integer.parseInt(opCode[2].substring(1));
+                boolean isNumber = false;
+
+                String lab = opCode[2].substring(1);
+                for(char c : lab.toCharArray())
+                {
+                    if(Character.isDigit(c)){
+                        isNumber = true;
+                    }
+                }
+                if(isNumber == false){
+                    location = searchSYMTABLE(lab).location;
+                    System.out.println(location);
+                }
+                else if(isNumber){
+                    location = Integer.parseInt(lab);
+                    System.out.println(location);
+                }
+                //location = Integer.parseInt(opCode[2].substring(1));
                 //check if there is an indirect
             } else if(opCode[2].charAt(0) == '='){
                 //TODO: Deal with literals
             } else if(opCode[2].charAt(0) == '@'){
-                //TODO: Figure out indirect addressing
                 location = searchSYMTABLE(opCode[2].substring(1)).location;
 
                 //61 and 294
