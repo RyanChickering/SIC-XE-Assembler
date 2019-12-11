@@ -3,40 +3,40 @@ import java.util.Map;
 
 public class LITTAB {
 
-    private static final Map<String, Literal> LITTAB;
+    private static final Map<Integer, Literal> LITTAB;
     static {
         LITTAB = new HashMap<>();
 
     }
 
-    public static void add(String name, int value, int length){
-        LITTAB.put(name, new Literal(value, length,  ""));
+    public static void add(int value, String name, int length){
+        LITTAB.put(value, new Literal(name, length,  ""));
     }
-    public static boolean search(String name){
-        return (getLITTAB(name) != null);
-    }
-
-    public static void setAddress(String name, String address){
-        LITTAB.get(name).address = address;
+    public static boolean search(int value){
+        return (getLITTAB(value) != null);
     }
 
-    public static Literal getLITTAB(String name){
-        return LITTAB.get(name);
+    public static void setAddress(int value, String address){
+        LITTAB.get(value).address = address;
     }
 
-    public static int getValue(String name){
-        return LITTAB.get(name).value();
+    public static Literal getLITTAB(int value){
+        return LITTAB.get(value);
     }
 
-    public static int getLength(String name){
-        return LITTAB.get(name).length();
+    public static String getName(int value){
+        return LITTAB.get(value).name();
     }
 
-    public static String getAddress(String name){
-        return LITTAB.get(name).address();
+    public static int getLength(int value){
+        return LITTAB.get(value).length();
     }
 
-    public static Map<String, Literal> getLittab() {
+    public static String getAddress(int value){
+        return LITTAB.get(value).address();
+    }
+
+    public static Map<Integer, Literal> getLittab() {
         return LITTAB;
     }
 }
