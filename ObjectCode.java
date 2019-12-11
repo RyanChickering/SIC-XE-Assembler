@@ -121,7 +121,7 @@ public class ObjectCode {
                     }
                     else {
                         // check if it is base or pc relative
-                        if (TA - PC > 2048) {
+                        if (TA - PC > 2048 || TA - PC < -2048) {
                             PC = base;
                             b = true;
                             p = false;
