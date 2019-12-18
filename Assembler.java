@@ -46,6 +46,7 @@ public class Assembler {
             System.out.println("Oops! no argument was passed");
             System.exit(1);
         }
+
     }
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
@@ -184,20 +185,20 @@ public class Assembler {
                             String[] mods = modRecParser(opCode[2]);
                             modtotal += mods.length*3;
                             for(int i = 0; i < mods.length; i++){
-                                modificationRecord.append("M^");
+                                modificationRecord.append("M");
                                 modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
-                                modificationRecord.append("^");
-                                modificationRecord.append("06");
-                                modificationRecord.append("^");
+                                //modificationRecord.append("^");
+                                modificationRecord.append("05");
+                                //modificationRecord.append("^");
                                 modificationRecord.append(mods[i]);
                                 modificationRecord.append("\n");
                             }
                         } else {
-                            modificationRecord.append("M^");
+                            modificationRecord.append("M");
                             modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
-                            modificationRecord.append("^");
+                            //modificationRecord.append("^");
                             modificationRecord.append("05");
-                            modificationRecord.append("^");
+                            //modificationRecord.append("^");
                             modificationRecord.append("+");
                             modificationRecord.append(progName);
                             modificationRecord.append("\n");
@@ -274,7 +275,7 @@ public class Assembler {
                     }
                     //add the object code to the text record
 
-                    textRecord.append("^");
+                    //textRecord.append("^");
                     textRecord.append(string);
                     end += string.length()/2;
                     //keep track of how many object codes have been added to the current record because the ^ creates a new character
@@ -284,7 +285,7 @@ public class Assembler {
                     writeListing(textRecord.toString(), start, end);
                     end = string.length()/2;
                     textRecord = new StringBuilder();
-                    textRecord.append("^");
+                    //textRecord.append("^");
                     textRecord.append(string);
                     start = hexToDec(opCode[3]);
                     opNum = 0;
@@ -521,7 +522,7 @@ public class Assembler {
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         StringBuilder string = new StringBuilder();
         String[] opcode = pass2Parser(nextLine());
-        String out = String.format("%s%-6s%s%s%s%s","H^", (opcode[0]),"^",padWith0s(opcode[3]),"^",padWith0s(decToHex(progLength)));
+        String out = String.format("%s%-6s%s%s","H", (opcode[0]),padWith0s(opcode[3]),padWith0s(decToHex(progLength)));
         printer.println(out);
         printer.close();
     }
@@ -542,9 +543,9 @@ public class Assembler {
         BufferedWriter bw = new BufferedWriter(fw);
         PrintWriter printer = new PrintWriter(bw);
         StringBuilder string = new StringBuilder();
-        string.append("T^");
+        //string.append("T^");
         string.append(padWith0s(decToHex(start)));
-        string.append("^");
+        //string.append("^");
         if(decToHex(end).length() < 2){
             string.append("0");
         }
@@ -565,7 +566,7 @@ public class Assembler {
         string.append(modRecord);
         lineCnt = 0;
         String[] opcode = pass2Parser(nextLine());
-        string.append("E^");
+        string.append("E");
         string.append(padWith0s(opcode[3]));
         printer.append(string);
         printer.close();
