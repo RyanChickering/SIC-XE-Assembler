@@ -19,6 +19,7 @@ public class Assembler {
     private static int lineCnt;
     private static int progLength;
     private static ArrayList<Literal> litTab = new ArrayList<>();
+    private static int currLit;
 
     //the main method
     public static void main(String[]args) throws IOException, invalidOPException, undefinedSymbolException{
@@ -66,6 +67,7 @@ public class Assembler {
 
     //Pass 1 looks through the original input and makes sure that all symbols and operations are legitimate.
     private static void pass1(String filename) throws IOException,invalidOPException, ErrorDuplicateLabelException{
+        currLit = 0;
         //gets the lines from the file provided as an argument
         getLines(filename);
         String[] opcode = opcodeParser(nextLine());
@@ -124,12 +126,22 @@ public class Assembler {
                     //find length of operand
                     locctr += calcValueSize(opcode[2]);
                 } else if(opcode[1].equals("LTORG")) {
-                    for(Literal lit:litTab){
-                        locctr += lit.value.length()/2;
-                        writeLiteral(lit,locctr);
+                    for(int i = currLit; i<litTab.size(); i++){
+                        writeLiteral(litTab.get(i),locctr);
+                        locctr += litTab.get(i).value.length()/2;
+                        StringBuilder string = new StringBuilder();
+                        String address = Integer.toHexString(locctr).toUpperCase();
+                        if (address.length() <= 4){
+                            string.append(address);
+                            string.delete(0,address.length());
+                        }
+                        litTab.get(i).address = address;
+                        currLit = i;
                     }
                 } else {
-                    throw new invalidOPException();
+                    if(!(opcode[0].equals("*"))) {
+                        throw new invalidOPException();
+                    }
                     //error not a real thing
                 }
                 if (opcode[2].charAt(0) == '='){
@@ -139,30 +151,32 @@ public class Assembler {
                        Pass 2 needs to turn the literals into their described values in the object codes. Still have line reference to
                        them though.
                      */
-                    String name = opcode[2];
-                    String value;
-                    if(opcode[2].charAt(1) == 'X'){
-                        value = opcode[2].substring(opcode[2].indexOf("'")+1,opcode[2].lastIndexOf("'"));
-                    }else if(opcode[2].charAt(1) == 'C'){
-                        value = opcode[2].substring(opcode[2].indexOf("'")+1,opcode[2].lastIndexOf("'"));
-                        StringBuilder string = new StringBuilder();
-                        for(int i = 0; i < value.length(); i++){
-                            int ascii = value.charAt(i);
-                            string.append(Integer.toHexString(ascii).toUpperCase());
-                        }
-                        value = string.toString();
-                    }else {
-                        value = "";
+                    if(litSearch(opcode[2]) == null) {
+                        String name = opcode[2];
+                        String value = litvalue(opcode[2]);
+                        Literal literal = new Literal(name, value);
+                        litTab.add(literal);
                     }
-                    Literal literal = new Literal(name, value);
-                    litTab.add(literal);
                 }
 
                 opcode = opcodeParser(nextLine());
             }
         }
-
         writeIntermediate(locctr, opcode);
+        if(litTab.size() > 0){
+            for(int i = currLit; i<litTab.size(); i++){
+                writeLiteral(litTab.get(i),locctr);
+                locctr += litTab.get(i).value.length()/2;
+                StringBuilder string = new StringBuilder();
+                String address = Integer.toHexString(locctr).toUpperCase();
+                if (address.length() <= 4){
+                    string.append(address);
+                    string.delete(0,address.length());
+                }
+                litTab.get(i).address = address;
+                currLit = i;
+            }
+        }
         progLength = locctr - startLoc;
     }
 
@@ -201,7 +215,17 @@ public class Assembler {
             }
             if(searchOPTABLE(opCode[1]) != null){
                 //Calculate the address of whatever is in the operand field
-                location = locationCalculator(opCode);
+                if(opCode[2].charAt(0) == '='){
+                    String value = litvalue(opCode[2]);
+                    if(litSearch(value)!= null){
+                        opCode[2] = litSearch(value).address;
+                    }
+                }
+                if(litSearch(litvalue(opCode[2])) != null){
+                    location = Integer.parseInt(opCode[2],16);
+                } else {
+                    location = locationCalculator(opCode);
+                }
                 //convert the opcode and format of the opcode into their integer forms
                 int opVal = Integer.parseInt(searchOPTABLE(opCode[1]).opcode(),16);
                 int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
@@ -215,7 +239,7 @@ public class Assembler {
                         format = searchOPTABLE(opCode[1]).format();
                     }
                     if(opCode[2].charAt(0) != '#') {
-                        if(opCode[2].contains("+") || opCode[2].contains("-")) {
+                        if(searchOPTABLE(opCode[1]) != null) {
                             String[] mods = modRecParser(opCode[2]);
                             modtotal += mods.length*3;
                             for(int i = 0; i < mods.length; i++){
@@ -254,7 +278,7 @@ public class Assembler {
                 //and declare the correct amount of space
             } else if(opCode[1].equals("WORD")){
                 if(opCode[2].charAt(0) == 'X'){
-
+                    string.append(opCode[2].substring(opCode[2].indexOf("'"+1,opCode[2].lastIndexOf("'"))));
                 } else if(opCode[2].charAt(0) == 'C') {
                     opCode[2] = opCode[2].substring(opCode[2].indexOf("'")+1,opCode[2].lastIndexOf("'"));
                     for(int i = 0; i < opCode[2].length(); i++){
@@ -335,13 +359,31 @@ public class Assembler {
         writeEndRecord(modificationRecord.toString());
     }
 
-    private static boolean litSearch(String value){
+    private static String litvalue(String opcode){
+        String value;
+        if (opcode.charAt(1) == 'X') {
+            value = opcode.substring(opcode.indexOf("'") + 1, opcode.lastIndexOf("'"));
+        } else if (opcode.charAt(1) == 'C') {
+            value = opcode.substring(opcode.indexOf("'") + 1, opcode.lastIndexOf("'"));
+            StringBuilder string = new StringBuilder();
+            for (int i = 0; i < value.length(); i++) {
+                int ascii = value.charAt(i);
+                string.append(Integer.toHexString(ascii).toUpperCase());
+            }
+            value = string.toString();
+        } else {
+            value = null;
+        }
+        return value;
+    }
+
+    private static Literal litSearch(String value){
         for(int i = 0; i < litTab.size(); i++){
             if(litTab.get(i).value.equals(value)){
-                return true;
+                return litTab.get(i);
             }
         }
-        return false;
+        return null;
     }
 
     private static void writeLiteral(Literal literal, int location) throws IOException{
@@ -349,8 +391,14 @@ public class Assembler {
         FileWriter fw = new FileWriter(filepath,true);
         BufferedWriter bw = new BufferedWriter(fw);
         PrintWriter printer = new PrintWriter(bw);
-        StringBuilder string = new StringBuilder();
-        printer.append(String.format("%s  %-8s%-8s%-8s\n",Integer.toHexString(location), "*",literal.name,literal.value));
+        StringBuilder string = new StringBuilder("0000");
+        String address = Integer.toHexString(location).toUpperCase();
+        if (address.length() <= 4){
+            string.append(address);
+            string.delete(0,address.length());
+        }
+        printer.append(String.format("%s  %-8s%-8s%-8s\n",string, "*",literal.name,literal.value));
+        printer.close();
     }
 
     private static int calcValueSize(String input){

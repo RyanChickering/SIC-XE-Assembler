@@ -7,12 +7,14 @@ CLOOP   +JSUB   RDREC
         JEQ     ENDFIL
         +JSUB   WRREC
         J       CLOOP
-ENDFIL  LDA     EOF
+ENDFIL  LDA     =C'EOF'
+        LDS     =5
         STA     BUFFER
         LDA     #3
         STA     LENGTH
         +JSUB   WRREC
         J       @RETADR
+        LTORG
 EOF     BYTE    C'EOF'
 RETADR  RESW    1
 LENGTH  RESW    1
