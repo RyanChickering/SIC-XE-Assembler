@@ -1,22 +1,18 @@
 
 public class Literal {
     String name;
-    int length;
-    String address;
+    String value;
 
-    public Literal(String name, int length, String address) {
-        name = name;
-        length = length;
-        address = address;
+    public Literal(String name, String value) {
+        this.name = name;
+        this.value = value;
     }
 
     public String name() {
         return name;
     }
 
-    public int length() {
-        return length;
+    public String length() {
+        return value;
     }
-
-    public String address() { return address; }
 }

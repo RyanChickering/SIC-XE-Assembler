@@ -1,3 +1,11 @@
+/* SIC/XE Assembler CS 530
+   Group members:
+   Ryan Chickering
+   Cody Lin
+   Brian Duong
+   Kent Truong
+ */
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -10,9 +18,12 @@ public class Assembler {
     private static List<String> lines;
     private static int lineCnt;
     private static int progLength;
+    private static ArrayList<Literal> litTab = new ArrayList<>();
 
+    //the main method
     public static void main(String[]args) throws IOException, invalidOPException, undefinedSymbolException{
         //Should provide cmd line argument to pass an input file to the assembler
+        File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
         lineCnt = 0;
         try {
             if (args[0].length() == 0) {
@@ -23,27 +34,32 @@ public class Assembler {
             }
             pass2();
             //Deletes the intermediate file
-            File intermediateFile = new File(System.getProperty("user.dir") + "/pass1Intermediate");
+
             intermediateFile.delete();
             System.out.println("Assembled with no errors");
         }
         catch(invalidOPException e){
             System.out.println("The opcode is invalid");
+            intermediateFile.delete();
             System.exit(1);
         }
         catch(ErrorDuplicateLabelException e){
             System.out.println("Duplicate labels are found");
+            intermediateFile.delete();
             System.exit(1);
         }
         catch(NullPointerException e) {
             System.out.println("Oops! Something went wrong! Check that your code is syntactically correct!");
+            intermediateFile.delete();
             System.exit(1);
         }
         catch (StringIndexOutOfBoundsException e){
             System.out.println("Oops, something went wrong while parsing");
+            intermediateFile.delete();
         }
         catch(NoArgsException e){
             System.out.println("Oops! no argument was passed");
+            intermediateFile.delete();
             System.exit(1);
         }
     }
@@ -106,24 +122,40 @@ public class Assembler {
                     locctr += Integer.parseInt(opcode[2]);
                 } else if(opcode[1].equals("BYTE")){
                     //find length of operand
-                    int oplength;
-                    String s = opcode[2].substring(opcode[2].indexOf("'") + 1, opcode[2].lastIndexOf("'"));
-                    if(opcode[2].charAt(0) == 'C'){
-                        oplength = s.length();
-                    } else {
-                        oplength = s.length()/2;
+                    locctr += calcValueSize(opcode[2]);
+                } else if(opcode[1].equals("LTORG")) {
+                    for(Literal lit:litTab){
+                        locctr += lit.value.length()/2;
+                        writeLiteral(lit,locctr);
                     }
-                    locctr += oplength;
                 } else {
                     throw new invalidOPException();
                     //error not a real thing
                 }
-                int index;
-                String name;
-                String value;
-                int length;
-                if (opcode[2].contains("=")){
-
+                if (opcode[2].charAt(0) == '='){
+                    /* Pass in a line with a literal. Use the operand to calculate the value in hex.
+                       Store literals in lit table based on value. When an LTORG appears, print out
+                       literals in the order they were sent in with * in opcode[0], the ='' in opcode[1], and the value in opcode[2]
+                       Pass 2 needs to turn the literals into their described values in the object codes. Still have line reference to
+                       them though.
+                     */
+                    String name = opcode[2];
+                    String value;
+                    if(opcode[2].charAt(1) == 'X'){
+                        value = opcode[2].substring(opcode[2].indexOf("'")+1,opcode[2].lastIndexOf("'"));
+                    }else if(opcode[2].charAt(1) == 'C'){
+                        value = opcode[2].substring(opcode[2].indexOf("'")+1,opcode[2].lastIndexOf("'"));
+                        StringBuilder string = new StringBuilder();
+                        for(int i = 0; i < value.length(); i++){
+                            int ascii = value.charAt(i);
+                            string.append(Integer.toHexString(ascii).toUpperCase());
+                        }
+                        value = string.toString();
+                    }else {
+                        value = "";
+                    }
+                    Literal literal = new Literal(name, value);
+                    litTab.add(literal);
                 }
 
                 opcode = opcodeParser(nextLine());
@@ -133,6 +165,7 @@ public class Assembler {
         writeIntermediate(locctr, opcode);
         progLength = locctr - startLoc;
     }
+
 
     private static void pass2() throws IOException, undefinedSymbolException{
         lineCnt = 0;
@@ -173,6 +206,8 @@ public class Assembler {
                 int opVal = Integer.parseInt(searchOPTABLE(opCode[1]).opcode(),16);
                 int programCount = hexToDec(opCode[3])+Integer.parseInt(searchOPTABLE(opCode[1]).format());
                 String format;
+                //Modification record builder
+                //checks for possible operators between labels and extended format in order to build the modification record
                 if(extended || (opCode[2].contains("+") || opCode[2].contains("-"))){
                     if(extended){
                         format = "4";
@@ -186,18 +221,18 @@ public class Assembler {
                             for(int i = 0; i < mods.length; i++){
                                 modificationRecord.append("M^");
                                 modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
-                                modificationRecord.append("^");
+                                //modificationRecord.append("^");
                                 modificationRecord.append("06");
-                                modificationRecord.append("^");
+                                //modificationRecord.append("^");
                                 modificationRecord.append(mods[i]);
                                 modificationRecord.append("\n");
                             }
                         } else {
                             modificationRecord.append("M^");
                             modificationRecord.append(padWith0s(Integer.toHexString((Integer.parseInt(opCode[3], 16) + modtotal))));
-                            modificationRecord.append("^");
+                            //modificationRecord.append("^");
                             modificationRecord.append("05");
-                            modificationRecord.append("^");
+                            //modificationRecord.append("^");
                             modificationRecord.append("+");
                             modificationRecord.append(progName);
                             modificationRecord.append("\n");
@@ -215,6 +250,8 @@ public class Assembler {
                 if(searchSYMTABLE(opCode[2])!= null) {
                     base = (searchSYMTABLE(opCode[2]).location);
                 }
+                //if a word is declared, check if its characters or a hex value, or just an int,
+                //and declare the correct amount of space
             } else if(opCode[1].equals("WORD")){
                 if(opCode[2].charAt(0) == 'X'){
 
@@ -274,7 +311,7 @@ public class Assembler {
                     }
                     //add the object code to the text record
 
-                    textRecord.append("^");
+                    //textRecord.append("^");
                     textRecord.append(string);
                     end += string.length()/2;
                     //keep track of how many object codes have been added to the current record because the ^ creates a new character
@@ -284,7 +321,7 @@ public class Assembler {
                     writeListing(textRecord.toString(), start, end);
                     end = string.length()/2;
                     textRecord = new StringBuilder();
-                    textRecord.append("^");
+                    //textRecord.append("^");
                     textRecord.append(string);
                     start = hexToDec(opCode[3]);
                     opNum = 0;
@@ -296,6 +333,37 @@ public class Assembler {
             writeListing(textRecord.toString(), start, end);
         }
         writeEndRecord(modificationRecord.toString());
+    }
+
+    private static boolean litSearch(String value){
+        for(int i = 0; i < litTab.size(); i++){
+            if(litTab.get(i).value.equals(value)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void writeLiteral(Literal literal, int location) throws IOException{
+        String filepath = System.getProperty("user.dir") + "/pass1Intermediate";
+        FileWriter fw = new FileWriter(filepath,true);
+        BufferedWriter bw = new BufferedWriter(fw);
+        PrintWriter printer = new PrintWriter(bw);
+        StringBuilder string = new StringBuilder();
+        printer.append(String.format("%s  %-8s%-8s%-8s\n",Integer.toHexString(location), "*",literal.name,literal.value));
+    }
+
+    private static int calcValueSize(String input){
+        int oplength;
+        String s = input.substring(input.indexOf("'") + 1, input.lastIndexOf("'"));
+        if(input.charAt(0) == 'C'){
+            oplength = s.length();
+        } else if(input.charAt(0) == 'X'){
+            oplength = s.length()/2;
+        } else {
+            oplength = s.length();
+        }
+        return oplength;
     }
 
     private static int locationCalculator(String[] opCode) throws undefinedSymbolException{
@@ -334,7 +402,7 @@ public class Assembler {
                     location = Integer.parseInt(lab);
                 }
                 //location = Integer.parseInt(opCode[2].substring(1));
-                //check if there is an indirect
+                //check if there is an operator
             } else if(opCode[2].contains("+") || opCode[2].contains("-")){
                 String[] labels = modRecParser(opCode[2]);
                 for(int i = 0; i < labels.length; i++){
@@ -350,8 +418,6 @@ public class Assembler {
                 }
             } else if(opCode[2].charAt(0) == '@'){
                 location = searchSYMTABLE(opCode[2].substring(1)).location;
-
-                //61 and 294
                 //if the thing is not an immediate or indirect, check the symtable to see if that symbol exists.
                 //check to see if there are multiple fields
             } else if(opCode[2].contains(",")){
@@ -521,7 +587,7 @@ public class Assembler {
         PrintWriter printer = new PrintWriter(filepath, "UTF-8");
         StringBuilder string = new StringBuilder();
         String[] opcode = pass2Parser(nextLine());
-        String out = String.format("%s%-6s%s%s%s%s","H^", (opcode[0]),"^",padWith0s(opcode[3]),"^",padWith0s(decToHex(progLength)));
+        String out = String.format("%s%-6s%s%s","H", (opcode[0]),padWith0s(opcode[3]),padWith0s(decToHex(progLength)));
         printer.println(out);
         printer.close();
     }
@@ -542,9 +608,9 @@ public class Assembler {
         BufferedWriter bw = new BufferedWriter(fw);
         PrintWriter printer = new PrintWriter(bw);
         StringBuilder string = new StringBuilder();
-        string.append("T^");
+        string.append("T");
         string.append(padWith0s(decToHex(start)));
-        string.append("^");
+        //string.append("^");
         if(decToHex(end).length() < 2){
             string.append("0");
         }
@@ -565,7 +631,7 @@ public class Assembler {
         string.append(modRecord);
         lineCnt = 0;
         String[] opcode = pass2Parser(nextLine());
-        string.append("E^");
+        string.append("E");
         string.append(padWith0s(opcode[3]));
         printer.append(string);
         printer.close();
